@@ -28,9 +28,9 @@ export const productKeys = {
 // Helper function to map category names to category_id
 const getCategoryId = (categoryName: string): number | null => {
   const categoryMap: { [key: string]: number } = {
-    electronics: 3,
-    clothing: 1,
-    accessories: 2,
+    electronics: 1,
+    clothing: 2,
+    accessories: 3,
   };
   return categoryMap[categoryName] || null;
 };
@@ -158,15 +158,8 @@ export function useProducts(options?: UseQueryOptions<ProductType[]>) {
     return processed;
   }, [searchTerm, filters, query.data]);
 
-  // Filter products based on user authentication
-  const getFilteredProductsForUser = (user: unknown) => {
-    if (!user) {
-      return processedProducts.filter(
-        (product) => ![1, 2].includes(product.category_id || 0) // 1 = clothing, 2 = accessories
-      );
-    }
-    return processedProducts;
-  };
+  // Show all products to everyone (no auth-based hiding)
+  const getFilteredProductsForUser = (_user: unknown) => processedProducts;
 
   return {
     ...query,
@@ -312,15 +305,8 @@ export function useFilteredProducts(
     return processed;
   }, [searchTerm, filters, productsQuery.data]);
 
-  // Filter products based on user authentication
-  const displayProducts = useMemo(() => {
-    if (!user) {
-      return processedProducts.filter(
-        (product) => ![1, 2].includes(product.category_id || 0) // 1 = clothing, 2 = accessories
-      );
-    }
-    return processedProducts;
-  }, [user, processedProducts]);
+  // Show all products to everyone (no auth-based hiding)
+  const displayProducts = useMemo(() => processedProducts, [processedProducts]);
 
   return {
     displayProducts,

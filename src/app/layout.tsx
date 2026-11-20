@@ -9,6 +9,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { TanStackQueryProvider } from "@/lib/providers/query-provider";
 import { ThemedToaster } from "@/components/ThemedToaster";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
+import { Footer } from "@/components/Footer";
 import { MainLayout } from "@/components/MainLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DemoBanner } from "@/components/DemoBanner";
@@ -53,6 +54,7 @@ export default function RootLayout({
                       <MainLayout>
                         <AnalyticsProvider>{children}</AnalyticsProvider>
                       </MainLayout>
+                      <Footer />
                     </SidebarInset>
                     <ThemedToaster />
                   </SidebarProvider>

@@ -17,7 +17,7 @@ export default async function ClothingPage() {
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <CategoryPage categoryName="Clothing" categoryId={1} />
+      <CategoryPage categoryName="Clothing" categoryId={2} />
     </Suspense>
   );
 }

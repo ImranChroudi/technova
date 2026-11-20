@@ -15,13 +15,13 @@ export function CategoryMarquee() {
   const items = [...categories, ...categories];
 
   return (
-    <section className="w-full overflow-hidden border-y bg-muted/30 py-4">
-      <div className="relative flex">
-        <div className="flex animate-marquee gap-6 whitespace-nowrap">
+    <section className="w-full max-w-full overflow-hidden border-y bg-muted/30 py-4">
+      <div className="relative w-full overflow-hidden">
+        <div className="flex w-max animate-marquee gap-6 whitespace-nowrap">
           {items.map((c, i) => (
             <Link
               key={`${c.id}-${i}`}
-              href={`/products?category=${c.id}`}
+              href={`/categories/${c.id}`}
               className="inline-flex items-center gap-2 rounded-full border bg-background px-5 py-2 text-sm font-medium hover:bg-accent transition-colors"
             >
               <span className="h-2 w-2 rounded-full bg-primary" />
