@@ -1,12 +1,16 @@
 import { Suspense } from "react";
 import ClientProducts from "@/components/ClientProducts";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { CategoryMarquee } from "@/components/CategoryMarquee";
+import { PersonalizedSections } from "@/components/PersonalizedSections";
 
 export default function Home() {
   return (
     <ErrorBoundary>
       <div className="bg-background min-h-screen">
+        <CategoryMarquee />
         <div className="container mx-auto px-4">
+          <PersonalizedSections />
           <div className="space-y-4 py-4">
             <Suspense
               fallback={

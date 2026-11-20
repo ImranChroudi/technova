@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { Star, Heart, ShoppingCart, Eye, Badge, Zap } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
-import { track } from "@/lib/analytics";
+import { track, flush } from "@/lib/analytics";
 
 interface ProductCardProps {
   product: ProductType;
@@ -22,6 +22,8 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const handleProductClick = () => {
     track({ type: "product_view", props: { product_id: product.product_id, price: product.price } });
+    // flush immediately so "Recently viewed" can update after navigation
+    flush();
     router.push(`/products/${product.product_id}`);
   };
 
