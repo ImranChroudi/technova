@@ -4,8 +4,6 @@ import { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/Navbar";
-import Sidebar  from "@/components/Sidebar";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { TanStackQueryProvider } from "@/lib/providers/query-provider";
 import { ThemedToaster } from "@/components/ThemedToaster";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
@@ -15,6 +13,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DemoBanner } from "@/components/DemoBanner";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { ChatWidget } from "@/components/chat/ChatWidget";
+// inside body, after SiteFooter:
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -46,23 +46,22 @@ export default function RootLayout({
                   enableSystem
                   disableTransitionOnChange
                 >
-                  <SidebarProvider>
-                    <Sidebar />
-                    <SidebarInset>
-                      <DemoBanner />
-                      <Navbar />
-                      <MainLayout>
-                        <AnalyticsProvider>{children}</AnalyticsProvider>
-                      </MainLayout>
-                      <SiteFooter />
-                    </SidebarInset>
+                  <div className="min-h-screen flex flex-col">
+                    <DemoBanner />
+                    <Navbar />
+                    <MainLayout>
+                      <AnalyticsProvider>{children}</AnalyticsProvider>
+                    </MainLayout>
+                    <SiteFooter />
+                    <ChatWidget />
                     <ThemedToaster />
-                  </SidebarProvider>
+                  </div>
                 </ThemeProvider>
               </CartProvider>
             </AuthProvider>
           </TanStackQueryProvider>
         </ErrorBoundary>
+
         
       </body>
     </html>
