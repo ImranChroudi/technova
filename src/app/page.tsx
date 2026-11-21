@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import ClientProducts from "@/components/ClientProducts";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { CategoryMarquee } from "@/components/CategoryMarquee";
+import { CategoryCarousel } from "@/components/home/CategoryCarousel";
+import { BrandsCarousel } from "@/components/home/BrandsCarousel";
+import { ProductCollectionSection } from "@/components/home/ProductCollectionSection";
 import { PersonalizedSections } from "@/components/PersonalizedSections";
 import { HomeHeroSection } from "@/components/home/HomeHeroSection";
 import { TrustBadges } from "@/components/TrustBadges";
@@ -13,7 +15,9 @@ export default function Home() {
       <div className="bg-background min-h-screen">
         <HomeHeroSection />
         <TrustBadges />
-        <CategoryMarquee />
+        <CategoryCarousel />
+        <BrandsCarousel />
+        <ProductCollectionSection />
         <div className="container mx-auto px-4">
           <PersonalizedSections />
           <div id="products" className="space-y-4 py-4">
