@@ -16,10 +16,11 @@ export default function Home() {
         <HomeHeroSection />
         <TrustBadges />
         <CategoryCarousel />
-        <BrandsCarousel />
-        <ProductCollectionSection />
         <div className="container mx-auto px-4">
           <PersonalizedSections />
+        </div>
+        <ProductCollectionSection />
+        <div className="w-full px-4">
           <div id="products" className="space-y-4 py-4">
             <Suspense
               fallback={
@@ -32,6 +33,7 @@ export default function Home() {
             </Suspense>
           </div>
         </div>
+        <BrandsCarousel />
         <Newsletter />
       </div>
     </ErrorBoundary>
