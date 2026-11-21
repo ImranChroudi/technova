@@ -1,8 +1,14 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 
 export type SearchParams = {
-  keywords?: string; category?: string; minPrice?: number; maxPrice?: number;
-  brand?: string; inStockOnly?: boolean; sort?: "relevance" | "price_asc" | "price_desc"; limit?: number;
+  keywords?: string;
+  category?: string; // name or id
+  minPrice?: number;
+  maxPrice?: number;
+  brand?: string;
+  inStockOnly?: boolean;
+  sort?: "relevance" | "price_asc" | "price_desc" | "rating";
+  limit?: number;
 };
 
 export async function searchProducts(params: SearchParams) {

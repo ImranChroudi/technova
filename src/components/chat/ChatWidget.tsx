@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, X, Send, Bot, User as UserIcon, Mic, MicOff } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User as UserIcon, Mic, MicOff, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
@@ -29,55 +29,117 @@ export function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content: "Hi! I'm your shopping assistant. Ask me anything about our products — by text or voice.",
-    },
-  ]);
+  const CHAT_HISTORY_KEY = "chat_history";
+  const [messages, setMessages] = useState<Msg[]>(() => {
+    if (typeof window === "undefined") {
+      return [{ id: "welcome", role: "assistant", content: "Hi! I'm your shopping assistant. Ask me anything — by text or voice." }];
+    }
+    try {
+      const raw = localStorage.getItem(CHAT_HISTORY_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed as Msg[];
+      }
+    } catch {}
+    return [{ id: "welcome", role: "assistant", content: "Hi! I'm your shopping assistant. Ask me anything — by text or voice." }];
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
 
-  // Voice input (Web Speech API)
   const [listening, setListening] = useState(false);
+  const [interim, setInterim] = useState("");
   const recognitionRef = useRef<any>(null);
+  const finalTranscriptRef = useRef("");
+
   const speechSupported =
     typeof window !== "undefined" &&
     !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
+  const stopListening = useCallback(() => {
+    try { recognitionRef.current?.stop(); } catch {}
+    setListening(false);
+    setInterim("");
+  }, []);
+
   const startListening = useCallback(() => {
     if (!speechSupported) {
-      toast.error("Voice input not supported in this browser");
+      toast.error("Voice input is not supported in this browser. Use Chrome/Edge.");
       return;
     }
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
+
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const rec = new SR();
     rec.lang = "en-US";
-    rec.interimResults = false;
+    rec.continuous = false;
+    rec.interimResults = true;
     rec.maxAlternatives = 1;
-    rec.onresult = (e: any) => {
-      const transcript = e.results?.[0]?.[0]?.transcript ?? "";
-      if (transcript) setInput((prev) => (prev ? prev + " " : "") + transcript);
-    };
-    rec.onerror = () => {
-      setListening(false);
-      toast.error("Voice recognition error");
-    };
-    rec.onend = () => setListening(false);
-    recognitionRef.current = rec;
-    setListening(true);
-    rec.start();
-  }, [speechSupported]);
 
-  const stopListening = useCallback(() => {
-    recognitionRef.current?.stop();
-    setListening(false);
+    finalTranscriptRef.current = "";
+
+    rec.onstart = () => setListening(true);
+
+    rec.onresult = (e: any) => {
+      let interimText = "";
+      let finalText = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += t;
+        else interimText += t;
+      }
+      if (finalText) {
+        finalTranscriptRef.current += (finalTranscriptRef.current ? " " : "") + finalText.trim();
+        setInput((prev) => {
+          const base = prev.replace(/\s*\[listening…\]\s*$/, "").trim();
+          return (base ? base + " " : "") + finalTranscriptRef.current;
+        });
+      }
+      setInterim(interimText.trim());
+    };
+
+    rec.onerror = (e: any) => {
+      const code = e?.error || "unknown";
+      const messages: Record<string, string> = {
+        "not-allowed": "Microphone permission denied. Allow mic access and try again.",
+        "no-speech": "No speech detected. Please try again.",
+        "audio-capture": "No microphone found.",
+        "network": "Network error during recognition.",
+        "aborted": "Recognition aborted.",
+      };
+      toast.error(messages[code] || `Voice error: ${code}`);
+      setListening(false);
+      setInterim("");
+    };
+
+    rec.onend = () => {
+      setInterim("");
+      setListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognitionRef.current = rec;
+    try {
+      rec.start();
+    } catch (err) {
+      console.error("Failed to start recognition:", err);
+      toast.error("Could not start voice input");
+      setListening(false);
+    }
   }, []);
+
+  // Persist chat history to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messages));
+    } catch {}
+  }, [messages]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, loading, interim]);
 
   const send = async (text: string) => {
     const trimmed = text.trim();
@@ -85,6 +147,7 @@ export function ChatWidget() {
     const userMsg: Msg = { id: crypto.randomUUID(), role: "user", content: trimmed };
     setMessages((m) => [...m, userMsg]);
     setInput("");
+    setInterim("");
     setLoading(true);
     try {
       const history = [...messages, userMsg].map((m) => ({ role: m.role, content: m.content }));
@@ -108,9 +171,7 @@ export function ChatWidget() {
     }
   };
 
-  const handleCategoryClick = (name: string) => {
-    send(`Show me ${name}`);
-  };
+  const handleCategoryClick = (name: string) => send(`Show me ${name}`);
 
   return (
     <>
@@ -132,6 +193,18 @@ export function ChatWidget() {
               <Bot className="h-5 w-5" />
               <span className="font-semibold">Shopping Assistant</span>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                setMessages([{ id: "welcome", role: "assistant", content: "Hi! I'm your shopping assistant. Ask me anything — by text or voice." }]);
+                try { localStorage.removeItem("chat_history"); } catch {}
+              }}
+              aria-label="Clear chat history"
+              title="Clear history"
+              className="hover:opacity-80 mr-2"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
             <button type="button" onClick={() => setOpen(false)} aria-label="Close chat" className="hover:opacity-80">
               <X className="h-5 w-5" />
             </button>
@@ -154,7 +227,6 @@ export function ChatWidget() {
                     {m.content}
                   </div>
 
-                  {/* Category suggestions when no products found */}
                   {m.categories && m.categories.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {m.categories.map((c) => (
@@ -190,18 +262,12 @@ export function ChatWidget() {
                               {p.stock > 0 ? `In stock (${p.stock})` : "Out of stock"}
                             </p>
                             <div className="flex gap-1 mt-1">
-                              <Link
-                                href={`/products/${p.product_id}`}
-                                className="text-[10px] px-2 py-0.5 rounded border hover:bg-muted"
-                              >
+                              <Link href={`/products/${p.product_id}`} className="text-[10px] px-2 py-0.5 rounded border hover:bg-muted">
                                 View
                               </Link>
                               <button
                                 type="button"
-                                onClick={() => {
-                                  addToCart(p);
-                                  toast.success("Added to cart");
-                                }}
+                                onClick={() => { addToCart(p); toast.success("Added to cart"); }}
                                 className="text-[10px] px-2 py-0.5 rounded bg-primary text-primary-foreground hover:opacity-90"
                               >
                                 Add
@@ -253,21 +319,19 @@ export function ChatWidget() {
             )}
           </div>
 
-          {/* Input */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              send(input);
-            }}
-            className="p-3 border-t flex gap-2"
-          >
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about products..."
-              className="flex-1"
-              disabled={loading}
-            />
+          <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="p-3 border-t flex gap-2">
+            <div className="flex-1 relative">
+              <Input
+                value={input + (interim ? " " + interim : "")}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={listening ? "Listening…" : "Ask about products..."}
+                className="flex-1 pr-2"
+                disabled={loading}
+              />
+              {listening && (
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              )}
+            </div>
             {speechSupported && (
               <Button
                 type="button"
@@ -275,13 +339,13 @@ export function ChatWidget() {
                 variant={listening ? "destructive" : "outline"}
                 onClick={listening ? stopListening : startListening}
                 aria-label={listening ? "Stop listening" : "Voice input"}
-                title="Voice input"
+                title="Voice input (microphone)"
               >
                 {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </Button>
             )}
             <Button type="submit" size="icon" disabled={loading || !input.trim()}>
-              <Send className="h-4 w-4" />
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </form>
         </div>

@@ -31,7 +31,7 @@ export function ProductCollectionSection() {
   const list = shown.length > 0 ? shown : products;
 
   return (
-    <section className="container mx-auto px-4 py-10">
+    <section className="w-full px-4 py-10">
       <div className="flex items-center justify-center gap-8 mb-6 border-b">
         <button
           type="button"

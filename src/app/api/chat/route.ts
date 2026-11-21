@@ -80,4 +80,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ reply: "Sorry, something went wrong. Please try again.", products: [], categories: [] }, { status: 200 });
   }
 }
-```<|end|>write to=assistant<|channel|>analysis<|message|>Created file successfully: /Users/macbookpro/Downloads/ecommerce-supabase-Nextjs-main/src/app/api/chat/route.ts

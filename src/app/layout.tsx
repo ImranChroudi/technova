@@ -8,12 +8,12 @@ import { TanStackQueryProvider } from "@/lib/providers/query-provider";
 import { ThemedToaster } from "@/components/ThemedToaster";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { SiteFooter } from "@/components/home/SiteFooter";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { MainLayout } from "@/components/MainLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DemoBanner } from "@/components/DemoBanner";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
-import { ChatWidget } from "@/components/chat/ChatWidget";
 // inside body, after SiteFooter:
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
