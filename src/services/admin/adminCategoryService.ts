@@ -54,4 +54,3 @@ export const adminCategoryService = {
     return true;
   },
 };
-```<|end|><|start|>write to=assistant<|channel|>analysis<|message|>Created file successfully: /Users/macbookpro/Downloads/ecommerce-supabase-Nextjs-main/src/services/admin/adminCategoryService.ts

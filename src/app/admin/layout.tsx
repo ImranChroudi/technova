@@ -18,7 +18,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   useEffect(() => {
     if (!loading && !isAdmin) {
-      router.push("/dashboard");
+      //router.push("/dashboard");
     }
   }, [isAdmin, loading, router]);
 

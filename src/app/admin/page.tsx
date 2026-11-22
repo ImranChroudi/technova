@@ -55,7 +55,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!adminLoading && !isAdmin) {
-      router.push("/dashboard");
+      //router.push("/dashboard");
       return;
     }
 

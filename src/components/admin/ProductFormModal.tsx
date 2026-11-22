@@ -43,6 +43,14 @@ interface FormData {
   category_id: string;
 }
 
+interface ProductFormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: CreateProductData) => Promise<void>;
+  product?: ProductWithDetails | null;
+  title: string;
+}
+
 export function ProductFormModal({
   isOpen,
   onClose,

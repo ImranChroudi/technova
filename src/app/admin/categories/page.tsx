@@ -224,4 +224,3 @@ export default function AdminCategoriesPage() {
     </div>
   );
 }
-```<|end|><|start|>write to=assistant<|channel|>analysis<|message|>Created file successfully: /Users/macbookpro/Downloads/ecommerce-supabase-Nextjs-main/src/app/admin/categories/page.tsx

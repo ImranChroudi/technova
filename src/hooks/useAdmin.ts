@@ -39,6 +39,7 @@ export function useAdmin(): AdminData {
           .eq("profile_id", user.id)
           .single();
 
+
         if (queryError) {
           // If no rows returned, user is not admin
           if (queryError.code === "PGRST116") {
@@ -51,6 +52,7 @@ export function useAdmin(): AdminData {
         } else {
           // User found in admin_users view
           setIsAdmin(!!data);
+          
         }
       } catch (err) {
         console.error("Unexpected error checking admin status:", err);
