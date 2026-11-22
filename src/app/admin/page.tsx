@@ -11,6 +11,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   Users,
   Package,
+  FolderTree,
   ShoppingCart,
   TrendingUp,
   AlertTriangle,
@@ -226,6 +227,12 @@ export default function AdminDashboard() {
               <Button className="w-full cursor-pointer" variant="outline">
                 <Package className="mr-2 h-4 w-4" />
                 Manage Products
+              </Button>
+            </Link>
+            <Link href="/admin/categories">
+              <Button className="w-full cursor-pointer" variant="outline">
+                <FolderTree className="mr-2 h-4 w-4" />
+                Manage Categories
               </Button>
             </Link>
             <Link href="/admin/orders">
