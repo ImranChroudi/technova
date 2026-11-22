@@ -7,6 +7,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -52,5 +53,32 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  return <>{children}</>;
+  const mobileItems = [
+    { href: "/admin", label: "Dashboard" },
+    { href: "/admin/products", label: "Products" },
+    { href: "/admin/categories", label: "Categories" },
+    { href: "/admin/orders", label: "Orders" },
+    { href: "/admin/users", label: "Users" },
+  ];
+
+  return (
+    <div className="flex min-h-screen">
+      <AdminSidebar />
+      <div className="flex-1 min-w-0 flex flex-col">
+        {/* Mobile nav */}
+        <nav className="md:hidden flex gap-2 overflow-x-auto p-3 border-b bg-muted/30">
+          {mobileItems.map((it) => (
+            <Link
+              key={it.href}
+              href={it.href}
+              className="whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium bg-background border"
+            >
+              {it.label}
+            </Link>
+          ))}
+        </nav>
+        <main className="flex-1 min-w-0">{children}</main>
+      </div>
+    </div>
+  );
 }
