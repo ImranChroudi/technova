@@ -56,7 +56,7 @@ export function CategoryCarousel() {
           >
             <div className="relative aspect-[4/3] bg-muted/40 overflow-hidden">
               <Image
-                src={`https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&sig=${c.id}`}
+                src={c.image || `https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&sig=${c.id}`}
                 alt={c.name}
                 fill
                 sizes="180px"

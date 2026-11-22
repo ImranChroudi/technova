@@ -5,6 +5,7 @@ export interface CreateCategoryData {
   name: string;
   description: string;
   parent_id?: number | null;
+  image?: string;
 }
 
 export interface UpdateCategoryData extends Partial<CreateCategoryData> {}
@@ -26,6 +27,7 @@ export const adminCategoryService = {
         name: data.name,
         description: data.description,
         parent_id: data.parent_id ?? null,
+        image: data.image,
       })
       .select()
       .single();
@@ -40,6 +42,7 @@ export const adminCategoryService = {
         name: data.name,
         description: data.description,
         parent_id: data.parent_id ?? null,
+        image: data.image,
       })
       .eq("id", id)
       .select()

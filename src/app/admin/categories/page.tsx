@@ -20,7 +20,9 @@ export default function AdminCategoriesPage() {
   const [editing, setEditing] = useState<CategoryType | null>(null);
   const [deleting, setDeleting] = useState<CategoryType | null>(null);
 
-  const [form, setForm] = useState<CreateCategoryData>({ name: "", description: "", parent_id: null });
+  const [form, setForm] = useState<CreateCategoryData>({ name: "", description: "", parent_id: null, image: "" });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const fetchCategories = async () => {
     try {
@@ -37,7 +39,11 @@ export default function AdminCategoriesPage() {
 
   useEffect(() => { fetchCategories(); }, []);
 
-  const resetForm = () => setForm({ name: "", description: "", parent_id: null });
+  const resetForm = () => {
+    setForm({ name: "", description: "", parent_id: null, image: "" });
+    setImageFile(null);
+    setImagePreview(null);
+  };
 
   const handleCreate = async () => {
     if (!form.name.trim() || !form.description.trim()) {
@@ -45,7 +51,12 @@ export default function AdminCategoriesPage() {
       return;
     }
     try {
-      await adminCategoryService.createCategory(form);
+      let imageUrl = form.image?.trim() || undefined;
+      if (imageFile) {
+        const { uploadImage } = await import("@/services/storage/storageService");
+        imageUrl = await uploadImage(imageFile);
+      }
+      await adminCategoryService.createCategory({ ...form, image: imageUrl });
       toast.success("Category created");
       setShowCreate(false);
       resetForm();
@@ -63,7 +74,12 @@ export default function AdminCategoriesPage() {
       return;
     }
     try {
-      await adminCategoryService.updateCategory(editing.id, form);
+      let imageUrl = form.image?.trim() || undefined;
+      if (imageFile) {
+        const { uploadImage } = await import("@/services/storage/storageService");
+        imageUrl = await uploadImage(imageFile);
+      }
+      await adminCategoryService.updateCategory(editing.id, { ...form, image: imageUrl });
       toast.success("Category updated");
       setEditing(null);
       resetForm();
@@ -89,7 +105,9 @@ export default function AdminCategoriesPage() {
 
   const openEdit = (c: CategoryType) => {
     setEditing(c);
-    setForm({ name: c.name, description: c.description, parent_id: c.parent_id ?? null });
+    setForm({ name: c.name, description: c.description, parent_id: c.parent_id ?? null, image: c.image || "" });
+    setImagePreview(c.image || null);
+    setImageFile(null);
   };
 
   const filtered = categories.filter((c) =>
@@ -179,6 +197,27 @@ export default function AdminCategoriesPage() {
                 value={form.parent_id ?? ""}
                 onChange={(e) => setForm({ ...form, parent_id: e.target.value ? Number(e.target.value) : null })}
               />
+              {imagePreview && <img src={imagePreview} alt="preview" className="h-20 w-20 rounded-md object-cover border" />}
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) {
+                    setImageFile(f);
+                    setImagePreview(URL.createObjectURL(f));
+                    setForm({ ...form, image: "" });
+                  }
+                }}
+              />
+              <Input
+                placeholder="Or image URL"
+                value={form.image || ""}
+                onChange={(e) => {
+                  setForm({ ...form, image: e.target.value });
+                  if (e.target.value) { setImageFile(null); setImagePreview(e.target.value); }
+                }}
+              />
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => { setShowCreate(false); resetForm(); }}>Cancel</Button>
                 <Button onClick={handleCreate}>Create</Button>
@@ -202,6 +241,27 @@ export default function AdminCategoriesPage() {
                 placeholder="Parent ID (optional)"
                 value={form.parent_id ?? ""}
                 onChange={(e) => setForm({ ...form, parent_id: e.target.value ? Number(e.target.value) : null })}
+              />
+              {imagePreview && <img src={imagePreview} alt="preview" className="h-20 w-20 rounded-md object-cover border" />}
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) {
+                    setImageFile(f);
+                    setImagePreview(URL.createObjectURL(f));
+                    setForm({ ...form, image: "" });
+                  }
+                }}
+              />
+              <Input
+                placeholder="Or image URL"
+                value={form.image || ""}
+                onChange={(e) => {
+                  setForm({ ...form, image: e.target.value });
+                  if (e.target.value) { setImageFile(null); setImagePreview(e.target.value); }
+                }}
               />
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => { setEditing(null); resetForm(); }}>Cancel</Button>

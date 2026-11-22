@@ -43,14 +43,6 @@ interface FormData {
   category_id: string;
 }
 
-interface ProductFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: CreateProductData) => Promise<void>;
-  product?: ProductWithDetails | null;
-  title: string;
-}
-
 export function ProductFormModal({
   isOpen,
   onClose,
@@ -68,6 +60,9 @@ export function ProductFormModal({
     category_id: "no-category",
   });
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Use the query hook to fetch categories
@@ -100,6 +95,8 @@ export function ProductFormModal({
         category_id: "no-category",
       });
     }
+    setImageFile(null);
+    setImagePreview(product?.image || null);
     setErrors({});
   }, [product, isOpen]);
 
@@ -145,11 +142,19 @@ export function ProductFormModal({
 
     setLoading(true);
     try {
+      let imageUrl = formData.image.trim() || undefined;
+      if (imageFile) {
+        setUploadingImage(true);
+        const { uploadImage } = await import("@/services/storage/storageService");
+        imageUrl = await uploadImage(imageFile);
+        setUploadingImage(false);
+      }
+
       const submitData: CreateProductData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
         price: parseFloat(formData.price),
-        image: formData.image.trim() || undefined,
+        image: imageUrl,
         stock: parseInt(formData.stock),
         sku: formData.sku.trim() || undefined,
         category_id:
@@ -313,13 +318,37 @@ export function ProductFormModal({
           </div>
 
           <div>
-            <Label htmlFor="image">Image URL</Label>
-            <Input
-              id="image"
-              value={formData.image}
-              onChange={(e) => handleInputChange("image", e.target.value)}
-              placeholder="https://example.com/image.jpg"
-            />
+            <Label htmlFor="image">Image</Label>
+            <div className="flex items-center gap-3">
+              {imagePreview && (
+                <img src={imagePreview} alt="preview" className="h-16 w-16 rounded-md object-cover border" />
+              )}
+              <div className="flex-1 space-y-2">
+                <Input
+                  id="image"
+                  value={formData.image}
+                  onChange={(e) => {
+                    handleInputChange("image", e.target.value);
+                    setImagePreview(e.target.value || null);
+                    setImageFile(null);
+                  }}
+                  placeholder="https://example.com/image.jpg (or upload below)"
+                />
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      setImageFile(f);
+                      setImagePreview(URL.createObjectURL(f));
+                      handleInputChange("image", "");
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            {uploadingImage && <p className="text-xs text-muted-foreground mt-1">Uploading image...</p>}
           </div>
 
           <DialogFooter>

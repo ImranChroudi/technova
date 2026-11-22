@@ -20,4 +20,3 @@ export async function uploadImage(file: File): Promise<string> {
 export function isImageFile(file: File): boolean {
   return file.type.startsWith("image/");
 }
-```<|end|><|start|>write to=assistant<|channel|>analysis<|message|>Created file successfully: /Users/macbookpro/Downloads/ecommerce-supabase-Nextjs-main/src/services/storage/storageService.ts

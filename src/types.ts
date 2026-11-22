@@ -103,4 +103,5 @@ export interface CategoryType {
   name: string;
   description: string;
   parent_id?: number;
+  image?: string;
 }
