@@ -242,67 +242,17 @@ export const profileService = {
       }
 
       // Get file extension and create a unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()
-        .toString(36)
-        .substring(2, 15)}.${fileExt}`;
-
-      // Store in user-specific folder to enforce ownership through RLS policies
-      // Format: userId/avatar-filename.ext
-      const filePath = `${userId}/${fileName}`;
-
-      // List of bucket names to try in order
-      const bucketNames = ['default', 'avatars', 'images', 'public', 'storage'];
-      let uploadError = null;
-      let uploadedPath = null;
-      let bucketUsed = null;
-
-      // Try to upload to each bucket until one works
-      for (const bucketName of bucketNames) {
-        try {
-          const { data, error } = await supabase.storage
-            .from(bucketName)
-            .upload(filePath, file, {
-              cacheControl: '3600',
-              upsert: true,
-            });
-
-          if (!error) {
-            // Upload succeeded
-            uploadedPath = data?.path || filePath;
-            bucketUsed = bucketName;
-            break; // Exit the loop if upload is successful
-          } else {
-            uploadError = error;
-            console.log(`Failed to upload to bucket "${bucketName}":`, error);
-          }
-        } catch (error) {
-          console.log(`Error trying bucket "${bucketName}":`, error);
-          // Continue to next bucket
-        }
+      // Upload via server route (uses service role, bypasses RLS)
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.url) {
+        throw new Error(json?.error || "Failed to upload image");
       }
+      const publicUrl = json.url as string;
 
-      // If no bucket worked
-      if (!bucketUsed) {
-        console.error(
-          'All bucket upload attempts failed. Last error:',
-          uploadError
-        );
-        throw new Error(
-          'Failed to upload image. Storage is not properly configured.'
-        );
-      }
-
-      // Get the public URL for the uploaded file
-      const { data: publicUrlData } = supabase.storage
-        .from(bucketUsed)
-        .getPublicUrl(uploadedPath || filePath);
-
-      if (!publicUrlData?.publicUrl) {
-        throw new Error('Failed to get public URL for uploaded image');
-      }
-
-      console.log(`Successfully uploaded to bucket "${bucketUsed}"`);
+      console.log("Successfully uploaded avatar via server route");
 
       // Delete previous avatars after successful upload
       // We don't need to wait for this to complete or handle errors
@@ -317,7 +267,7 @@ export const profileService = {
         });
 
       // Return the public URL
-      return publicUrlData.publicUrl;
+      return publicUrl;
     } catch (error) {
       console.error('Error in uploadAvatar:', error);
       toast.error('Failed to upload avatar');

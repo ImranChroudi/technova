@@ -1,20 +1,19 @@
-import { createClientSupabase } from "@/lib/supabase/client";
-
-const BUCKET = "product-images";
-
 export async function uploadImage(file: File): Promise<string> {
-  const supabase = createClientSupabase();
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const formData = new FormData();
+  formData.append("file", file);
 
-  const { error } = await supabase.storage
-    .from(BUCKET)
-    .upload(path, file, { cacheControl: "3600", upsert: false });
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
+  });
 
-  if (error) throw error;
+  const data = await res.json().catch(() => ({}));
 
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  return data.publicUrl;
+  if (!res.ok || !data?.url) {
+    throw new Error(data?.error || "Failed to upload image");
+  }
+
+  return data.url as string;
 }
 
 export function isImageFile(file: File): boolean {
