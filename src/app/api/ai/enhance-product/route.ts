@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
           },
         ];
         const raw = await provider.chat(messages, { json: true });
+        console.log("AI raw response:", raw);
         const parsed = JSON.parse(raw);
         return NextResponse.json({
           title: parsed.title || title,
@@ -46,8 +47,15 @@ export async function POST(req: NextRequest) {
           price: typeof parsed.price === "number" ? parsed.price : price,
           source: "ai",
         });
-      } catch (e) {
-        console.error("AI enhance failed, using fallback:", e);
+      } catch (e: any) {
+        console.error("AI enhance failed, using fallback:", e?.message || e);
+        return NextResponse.json({
+          title,
+          description,
+          price,
+          source: "fallback",
+          error: e?.message || String(e),
+        });
       }
     }
 

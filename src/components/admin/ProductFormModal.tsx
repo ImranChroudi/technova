@@ -102,6 +102,8 @@ export function ProductFormModal({
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [removingBg, setRemovingBg] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -194,16 +196,78 @@ export function ProductFormModal({
       if (data.description) setFormData((p) => ({ ...p, description: data.description }));
       if (typeof data.price === "number" && data.price > 0)
         setFormData((p) => ({ ...p, price: data.price.toString() }));
-      toast.success(
-        data.source === "ai"
-          ? "AI suggestions applied — review and edit before saving"
-          : "Basic cleanup applied"
-      );
+      if (data.source === "ai") {
+        toast.success("AI suggestions applied — review and edit before saving");
+      } else if (data.error) {
+        toast.error(`AI failed: ${data.error}. Using basic cleanup.`);
+      } else {
+        toast.success("Basic cleanup applied");
+      }
     } catch (e) {
       console.error(e);
       toast.error("Failed to enhance product");
     } finally {
       setEnhancing(false);
+    }
+  };
+
+  const handleGenerateImage = async () => {
+    if (!formData.title.trim()) {
+      toast.error("Enter a product title first");
+      return;
+    }
+    setGeneratingImage(true);
+    try {
+      const prompt = `${formData.title}. ${formData.description || ""}. Product photography, white background, high quality, e-commerce.`;
+      const res = await fetch("/api/ai/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        setImages((prev) => [data.url, ...prev].slice(0, 5));
+        setFormData((p) => ({ ...p, image: data.url }));
+        setImagePreview(data.url);
+        toast.success("AI image generated");
+      } else {
+        toast.error(data.error || "Failed to generate image");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to generate image");
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
+  const handleRemoveBg = async () => {
+    const target = formData.image || images[0];
+    if (!target) {
+      toast.error("Select or upload an image first");
+      return;
+    }
+    setRemovingBg(true);
+    try {
+      const res = await fetch("/api/ai/remove-bg", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: target }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        setImages((prev) => [data.url, ...prev.filter((u) => u !== target)].slice(0, 5));
+        setFormData((p) => ({ ...p, image: data.url }));
+        setImagePreview(data.url);
+        toast.success("Background removed");
+      } else {
+        toast.error(data.error || "Failed to remove background");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to remove background");
+    } finally {
+      setRemovingBg(false);
     }
   };
 
@@ -247,7 +311,7 @@ export function ProductFormModal({
       setLoading(false);
     }
   };
-
+//sk-eden-live-6liBvEpFi0TbZy8FeSaAKDrBLhZEeCntHslFmKyRvcQbb1399f8
   const totalImages = images.length + pendingFiles.length;
   const busy = loading || enhancing;
 
@@ -392,6 +456,46 @@ export function ProductFormModal({
                 placeholder="Or paste an image URL"
                 className="text-sm"
               />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full mt-2 gap-2"
+                onClick={handleGenerateImage}
+                disabled={generatingImage || !formData.title.trim()}
+              >
+                {generatingImage ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating image…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Generate image with AI
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full mt-2 gap-2"
+                onClick={handleRemoveBg}
+                disabled={removingBg || !(formData.image || images.length)}
+              >
+                {removingBg ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Removing background…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Remove background
+                  </>
+                )}
+              </Button>
             </div>
           </section>
 

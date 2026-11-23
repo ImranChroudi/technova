@@ -34,8 +34,6 @@ class GeminiProvider implements AIProvider {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    
-    console.log(res)
     if (!res.ok) {
       const errText = await res.text();
       console.error("Gemini API error:", res.status, errText);
