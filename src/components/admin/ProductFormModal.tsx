@@ -17,6 +17,7 @@ import {
   ProductWithDetails,
 } from "@/services/admin/adminProductService";
 import { useCategories } from "@/hooks/queries";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -61,6 +62,7 @@ export function ProductFormModal({
   });
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [enhancing, setEnhancing] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -133,6 +135,37 @@ export function ProductFormModal({
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleEnhance = async () => {
+    if (!formData.title.trim() && !formData.description.trim()) {
+      toast.error("Enter a title or description first");
+      return;
+    }
+    setEnhancing(true);
+    try {
+      const res = await fetch("/api/ai/enhance-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description,
+          price: parseFloat(formData.price) || 0,
+          sku: formData.sku,
+          category_id: formData.category_id !== "no-category" ? parseInt(formData.category_id) : null,
+        }),
+      });
+      const data = await res.json();
+      if (data.title) setFormData((p) => ({ ...p, title: data.title }));
+      if (data.description) setFormData((p) => ({ ...p, description: data.description }));
+      if (typeof data.price === "number" && data.price > 0) setFormData((p) => ({ ...p, price: data.price.toString() }));
+      toast.success(data.source === "ai" ? "AI suggestions applied — review & edit before saving" : "Basic cleanup applied");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to enhance product");
+    } finally {
+      setEnhancing(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -190,6 +223,18 @@ export function ProductFormModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleEnhance}
+              disabled={enhancing}
+            >
+              {enhancing ? "Enhancing..." : "✨ Enhance with AI"}
+            </Button>
+          </div>
+
           <div>
             <Label htmlFor="title">Product Title *</Label>
             <Input
