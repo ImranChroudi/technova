@@ -2,7 +2,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { profileService } from '@/services/profile/profileService'; // Import profileService
+
 import { linkVisitorToUser } from '@/lib/analytics'; // Import analytics linker
 import { authService } from '@/services/auth/authService'; // Import authService
 

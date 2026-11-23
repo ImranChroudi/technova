@@ -7,48 +7,29 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-  import { ShoppingCart, Heart, Share2, Minus, Plus } from "lucide-react";
+import { ShoppingCart, Heart, Share2, Minus, Plus, Truck, Shield, RotateCcw, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
-import { AnimatePresence, motion } from "motion/react"; 
-
-
-import {
-  ChevronLeft,
-  ChevronRight,
-  Truck,
-  Shield,
-  RotateCcw,
-  Check,
-} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { ReviewTab } from "./_components/review-tab";
 
 type ProductDetailsClientProps = {
   product: ProductType;
 };
 
-export default function ProductDetailsClient({
-  product,
-}: ProductDetailsClientProps) {
+export default function ProductDetailsClient({ product }: ProductDetailsClientProps) {
   const { addToCart } = useCart();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
 
-  // Get reviews for this product
-  // const { data: reviews = [], isLoading: reviewsLoading } = useGetProductReviews(
-  //   product.product_id,
-  // );
-
-  // Use real images array if available, otherwise fall back to main image
   const productImages =
     Array.isArray(product.images) && product.images.length > 0
       ? product.images
       : product.image
       ? [product.image]
       : ["/placeholder-product.jpg"];
-
- 
 
   const handleAddToCart = async () => {
     try {
@@ -63,61 +44,49 @@ export default function ProductDetailsClient({
   };
 
   const incrementQuantity = () => {
-    if (quantity < product.stock) {
-      setQuantity(quantity + 1);
-    }
+    if (quantity < product.stock) setQuantity(quantity + 1);
   };
-
   const decrementQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
-    }
+    if (quantity > 1) setQuantity(quantity - 1);
   };
-
-  const nextImage = () => {
-    setSelectedImageIndex((prev) => (prev + 1) % productImages.length);
-  };
-
-  const prevImage = () => {
-    setSelectedImageIndex(
-      (prev) => (prev - 1 + productImages.length) % productImages.length,
-    );
-  };
-
-  
-
-  // Mock rating distribution for demo
-  
+  const nextImage = () => setSelectedImageIndex((prev) => (prev + 1) % productImages.length);
+  const prevImage = () => setSelectedImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
 
   return (
     <div className="bg-background min-h-screen">
       <div className="container mx-auto px-4 py-8">
+        {/* Breadcrumb */}
+        <nav className="mb-6 text-sm text-muted-foreground">
+          <Link href="/" className="hover:text-foreground">Home</Link>
+          <span className="mx-2">/</span>
+          <span className="text-foreground">{product.title}</span>
+        </nav>
+
         <div className="mb-12 grid grid-cols-1 gap-8 lg:grid-cols-2">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="bg-muted relative aspect-square overflow-hidden rounded-lg">
+            <div className="bg-muted relative aspect-square overflow-hidden rounded-2xl border">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={selectedImageIndex}
                   className="relative h-full w-full"
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
                 >
                   {product.image ? (
                     <Image
                       src={productImages[selectedImageIndex]}
                       alt={product.title}
                       fill
-                      className="object-contain p-4"
+                      className="object-contain p-6"
                       loading="eager"
+                      sizes="(max-width: 1024px) 100vw, 50vw"
                     />
                   ) : (
                     <div className="bg-muted flex h-full w-full items-center justify-center">
-                      <span className="text-muted-foreground text-sm">
-                        No image available
-                      </span>
+                      <span className="text-muted-foreground text-sm">No image available</span>
                     </div>
                   )}
                 </motion.div>
@@ -133,7 +102,6 @@ export default function ProductDetailsClient({
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-
                   <Button
                     variant="outline"
                     size="icon"
@@ -152,35 +120,23 @@ export default function ProductDetailsClient({
                   className="bg-background/80 cursor-pointer backdrop-blur-sm"
                   onClick={() => setIsFavorited(!isFavorited)}
                 >
-                  <Heart
-                    className={`h-4 w-4 ${
-                      isFavorited ? "fill-red-500 text-red-500" : ""
-                    }`}
-                  />
+                  <Heart className={`h-4 w-4 ${isFavorited ? "fill-red-500 text-red-500" : ""}`} />
                 </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="bg-background/80 cursor-pointer backdrop-blur-sm"
-                >
+                <Button variant="outline" size="icon" className="bg-background/80 cursor-pointer backdrop-blur-sm">
                   <Share2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
             {productImages.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-5 gap-2">
                 {productImages.map((image, index) => (
-                  <motion.button
+                  <button
                     key={index}
                     className={`aspect-square cursor-pointer overflow-hidden rounded-lg border-2 transition-colors ${
-                      selectedImageIndex === index
-                        ? "border-primary"
-                        : "border-border"
+                      selectedImageIndex === index ? "border-primary" : "border-border hover:border-primary/40"
                     }`}
                     onClick={() => setSelectedImageIndex(index)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                   >
                     <Image
                       src={image}
@@ -189,7 +145,7 @@ export default function ProductDetailsClient({
                       height={100}
                       className="h-full w-full object-cover"
                     />
-                  </motion.button>
+                  </button>
                 ))}
               </div>
             )}
@@ -199,84 +155,56 @@ export default function ProductDetailsClient({
           <div className="space-y-6">
             <div>
               <motion.h1
-                className="text-foreground mb-2 text-3xl font-bold"
-                initial={{ opacity: 0, y: 20 }}
+                className="text-foreground mb-2 text-3xl md:text-4xl font-bold tracking-tight"
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
               >
                 {product.title}
               </motion.h1>
 
-              {/* <motion.div
-                className="mb-4 flex items-center gap-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <RenderStars rating={product.rating || 0} size="sm" />
-              </motion.div> */}
-
               <motion.div
-                className="mb-6 flex items-center gap-3"
-                initial={{ opacity: 0, y: 20 }}
+                className="mb-6 flex flex-wrap items-center gap-3"
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.1 }}
               >
                 <span className="text-foreground text-3xl font-bold">
                   ${product.price.toFixed(2)}
                 </span>
                 {product.stock > 0 ? (
-                  <Badge
-                    variant="secondary"
-                    className="bg-green-100 text-green-800"
-                  >
-                    In Stock ({product.stock} available)
+                  <Badge className="bg-success/10 text-success border-success/20">
+                    In stock ({product.stock} available)
                   </Badge>
                 ) : (
-                  <Badge variant="destructive">Out of Stock</Badge>
+                  <Badge variant="destructive">Out of stock</Badge>
                 )}
               </motion.div>
             </div>
 
             <motion.p
               className="text-muted-foreground leading-relaxed"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.15 }}
             >
               {product.description}
             </motion.p>
 
-            {/* Quantity and Add to Cart */}
             <motion.div
               className="space-y-4"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.2 }}
             >
               <div>
-                <h3 className="mb-3 font-medium">Quantity</h3>
+                <h3 className="mb-3 text-sm font-medium">Quantity</h3>
                 <div className="flex items-center gap-3">
                   <div className="border-border flex items-center rounded-lg border">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={decrementQuantity}
-                      disabled={quantity <= 1}
-                      className="cursor-pointer"
-                    >
+                    <Button variant="ghost" size="icon" onClick={decrementQuantity} disabled={quantity <= 1}>
                       <Minus className="h-4 w-4" />
                     </Button>
-                    <span className="min-w-[60px] px-4 py-2 text-center">
-                      {quantity}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={incrementQuantity}
-                      disabled={quantity >= product.stock}
-                      className="cursor-pointer"
-                    >
+                    <span className="min-w-[48px] px-3 py-2 text-center font-medium">{quantity}</span>
+                    <Button variant="ghost" size="icon" onClick={incrementQuantity} disabled={quantity >= product.stock}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -295,61 +223,48 @@ export default function ProductDetailsClient({
                 {isAddedToCart ? (
                   <>
                     <Check className="mr-2 h-4 w-4" />
-                    Added to Cart!
+                    Added to cart
                   </>
                 ) : (
                   <>
                     <ShoppingCart className="mr-2 h-4 w-4" />
-                    Add to Cart - ${(product.price * quantity).toFixed(2)}
+                    Add to cart — ${(product.price * quantity).toFixed(2)}
                   </>
                 )}
               </Button>
             </motion.div>
 
-            {/* Shipping Info */}
             <motion.div
-              className="border-border grid grid-cols-1 gap-4 border-t pt-6 sm:grid-cols-3"
-              initial={{ opacity: 0, y: 20 }}
+              className="grid grid-cols-1 gap-4 border-t pt-6 sm:grid-cols-3"
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.25 }}
             >
-              <div className="flex items-center gap-3">
-                <Truck className="text-primary h-5 w-5" />
-                <div>
-                  <p className="text-sm font-medium">Free Shipping</p>
-                  <p className="text-muted-foreground text-xs">
-                    Orders over $50
-                  </p>
+              {[
+                { icon: Truck, title: "Free shipping", desc: "Orders over $50" },
+                { icon: Shield, title: "Secure payment", desc: "SSL encrypted" },
+                { icon: RotateCcw, title: "30-day returns", desc: "No questions asked" },
+              ].map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="flex items-center gap-3">
+                  <Icon className="text-primary h-5 w-5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">{title}</p>
+                    <p className="text-muted-foreground text-xs">{desc}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Shield className="text-primary h-5 w-5" />
-                <div>
-                  <p className="text-sm font-medium">Secure Payment</p>
-                  <p className="text-muted-foreground text-xs">SSL encrypted</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <RotateCcw className="text-primary h-5 w-5" />
-                <div>
-                  <p className="text-sm font-medium">30-Day Returns</p>
-                  <p className="text-muted-foreground text-xs">
-                    No questions asked
-                  </p>
-                </div>
-              </div>
+              ))}
             </motion.div>
           </div>
         </div>
 
         {/* Product Details Tabs */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.3 }}
         >
           <Tabs defaultValue="description" className="mb-12">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-2 max-w-md">
               <TabsTrigger value="description">Description</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
             </TabsList>
@@ -364,7 +279,7 @@ export default function ProductDetailsClient({
                     {product.sku && (
                       <div className="border-border mt-4 border-t pt-4">
                         <p className="text-muted-foreground text-sm">
-                          <strong>SKU:</strong> {product.sku}
+                          <strong className="text-foreground">SKU:</strong> {product.sku}
                         </p>
                       </div>
                     )}
@@ -374,7 +289,7 @@ export default function ProductDetailsClient({
             </TabsContent>
 
             <TabsContent value="reviews" className="mt-6">
-                <ReviewTab product={product} />
+              <ReviewTab product={product} />
             </TabsContent>
           </Tabs>
         </motion.div>

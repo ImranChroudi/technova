@@ -111,10 +111,8 @@ export function HeroCarousel() {
             {slide.description}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90">
-              <Link href={slide.href}>
-                {slide.cta} <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+            <Button render={<Link href={slide.href} />} nativeButton={false} size="lg" className="bg-white text-primary hover:bg-white/90">
+              {slide.cta} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
           {/* trust logos */}

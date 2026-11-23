@@ -172,8 +172,10 @@ export function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="bg-primary h-1 w-1 rounded-full"></div>
-            <span className="text-primary text-xs font-medium">In Stock</span>
+            <div className={`h-1 w-1 rounded-full ${product.stock > 0 ? "bg-success" : "bg-destructive"}`}></div>
+            <span className={`text-xs font-medium ${product.stock > 0 ? "text-success" : "text-destructive"}`}>
+              {product.stock > 0 ? "In stock" : "Out of stock"}
+            </span>
           </div>
         </div>
 

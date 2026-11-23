@@ -242,7 +242,6 @@ export function useProductsByCategory(
 
 // Enhanced hook for filtered products with TanStack Query
 export function useFilteredProducts(
-  user: unknown,
   initialFilters?: Partial<FilterOptions>
 ) {
   const [searchTerm, setSearchTerm] = useState('');

@@ -62,7 +62,6 @@ export function ProductFormModal({
     category_id: "no-category",
   });
   const [loading, setLoading] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -168,7 +167,6 @@ export function ProductFormModal({
     if (!validateForm()) return;
     setLoading(true);
     try {
-      setUploadingImage(true);
       let mainImageUrl = formData.image.trim() || undefined;
       if (imageFile) {
         const { uploadImage } = await import("@/services/storage/storageService");
@@ -179,7 +177,6 @@ export function ProductFormModal({
         const { uploadImage } = await import("@/services/storage/storageService");
         uploadedExtras.push(await uploadImage(f));
       }
-      setUploadingImage(false);
 
       const finalImages = [...images, ...uploadedExtras];
       if (mainImageUrl && !finalImages.includes(mainImageUrl)) finalImages.unshift(mainImageUrl);
@@ -203,11 +200,9 @@ export function ProductFormModal({
       console.error("Error submitting product:", error);
     } finally {
       setLoading(false);
-      setUploadingImage(false);
     }
   };
 
-  const allPreviews = [...images, ...pendingFiles.map((f) => URL.createObjectURL(f))];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -428,7 +423,7 @@ export function ProductFormModal({
               <Button type="button" variant="outline" onClick={onClose} disabled={loading || enhancing}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading || enhancing}>
+              <Button type="button" onClick={handleSubmit} disabled={loading || enhancing}>
                 {loading ? "Saving..." : product ? "Update" : "Create"}
               </Button>
             </DialogFooter>

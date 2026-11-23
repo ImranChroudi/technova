@@ -3,7 +3,6 @@ import ClientProducts from "@/components/ClientProducts";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { CategoryCarousel } from "@/components/home/CategoryCarousel";
 import { BrandsCarousel } from "@/components/home/BrandsCarousel";
-import { ProductCollectionSection } from "@/components/home/ProductCollectionSection";
 import { PersonalizedSections } from "@/components/PersonalizedSections";
 import { HomeHeroSection } from "@/components/home/HomeHeroSection";
 import { TrustBadges } from "@/components/TrustBadges";
@@ -18,10 +17,13 @@ export default function Home() {
         <CategoryCarousel />
         <div className="container mx-auto px-4">
           <PersonalizedSections />
-        </div>
-        <ProductCollectionSection />
-        <div className="w-full px-4">
-          <div id="products" className="space-y-4 py-4">
+          <section id="products" className="space-y-4 py-8">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Catalog</p>
+                <h2 className="text-2xl md:text-3xl font-bold">All products</h2>
+              </div>
+            </div>
             <Suspense
               fallback={
                 <div className="flex min-h-[200px] items-center justify-center">
@@ -31,7 +33,7 @@ export default function Home() {
             >
               <ClientProducts />
             </Suspense>
-          </div>
+          </section>
         </div>
         <BrandsCarousel />
         <Newsletter />

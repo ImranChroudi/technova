@@ -19,8 +19,8 @@ import { cn } from "@/lib/utils";
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "E-Commerce",
-  description: "E-Commerce App",
+  title: "ShopClone — Modern E-Commerce",
+  description: "Shop the latest trends in electronics, fashion and more. Free shipping on orders over $50.",
 };
 
 export default function RootLayout({
@@ -32,8 +32,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <head>
         <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-        <title>My App</title>
-        <meta name="description" content="My App is a..." />
       </head>
       <body className="bg-background min-h-screen">
         <ErrorBoundary>

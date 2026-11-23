@@ -1,7 +1,8 @@
 "use client";
-import { ShoppingCart, Moon, Sun, User, LogIn } from "lucide-react";
+import { ShoppingCart, Moon, Sun, User, LogIn, Search } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useCart } from "@/context/CartContext";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
@@ -14,75 +15,70 @@ export function Navbar() {
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
+  const [q, setQ] = useState("");
 
-  // Handle mounting state
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
-  // Prevent hydration mismatch by not rendering theme-dependent content until mounted
   if (!mounted) {
-    return null; // Return null on first render to avoid hydration mismatch
+    return (
+      <nav className="border-border bg-background/95 w-full border-b h-16" />
+    );
   }
 
-  return (
-    <nav className="border-border bg-background/95 supports-[backdrop-filter]:bg-background/60 z-60 w-full border-b backdrop-blur">
-      <div className="mx-4 flex h-16 items-center">
-        <div className="flex items-center gap-2">
-          <Link href="/" className="flex cursor-pointer items-center">
-            <h1 className="text-2xl font-bold">ShopClone</h1>
-          </Link>
-        </div>
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (q.trim()) router.push(`/products?search=${encodeURIComponent(q.trim())}`);
+  };
 
-        <div className="flex flex-1 items-center justify-end space-x-2">
+  return (
+    <nav className="border-border bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full border-b backdrop-blur">
+      <div className="container mx-auto flex h-16 items-center gap-3 px-4">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <span className="brand-gradient inline-block h-8 w-8 rounded-lg" />
+          <span className="text-xl font-bold tracking-tight">ShopClone</span>
+        </Link>
+
+        <form onSubmit={submitSearch} className="hidden md:flex flex-1 max-w-md mx-4">
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search products..."
+              className="pl-9 h-9 rounded-full"
+            />
+          </div>
+        </form>
+
+        <div className="flex items-center gap-1 ml-auto">
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 cursor-pointer"
+            className="h-9 w-9"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            aria-label="Toggle theme"
           >
-            {theme === "dark" ? (
-              <Sun className="h-[1.2rem] w-[1.2rem]" />
-            ) : (
-              <Moon className="h-[1.2rem] w-[1.2rem]" />
-            )}
-            <span className="sr-only">Toggle theme</span>
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
 
-          {user ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 cursor-pointer"
-              onClick={() => router.push("/profile")}
-            >
-              <User className="h-[1.2rem] w-[1.2rem]" />
-              <span className="sr-only">{user ? "Profile" : "Sign in"}</span>
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 cursor-pointer"
-              onClick={() => router.push("/signup")}
-            >
-              <LogIn className="h-[1.2rem] w-[1.2rem]" />
-              <span className="sr-only">Sign in</span>
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9"
+            onClick={() => router.push(user ? "/profile" : "/signin")}
+            aria-label={user ? "Profile" : "Sign in"}
+          >
+            {user ? <User className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
+          </Button>
+
           <Link href="/cart">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-9 w-9 cursor-pointer"
-            >
-              <ShoppingCart className="h-[1.2rem] w-[1.2rem]" />
+            <Button variant="ghost" size="icon" className="relative h-9 w-9">
+              <ShoppingCart className="h-4 w-4" />
               {totalItems > 0 && (
-                <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[11px] font-medium">
+                <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold">
                   {totalItems}
                 </span>
               )}
-              <span className="sr-only">Shopping cart</span>
             </Button>
           </Link>
         </div>

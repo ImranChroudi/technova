@@ -24,13 +24,11 @@ export function HeroBanner() {
             on orders over $50.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90">
-              <Link href="#products">
-                Shop now <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+            <Button render={<Link href="#products" />} nativeButton={false} size="lg" className="bg-white text-primary hover:bg-white/90">
+              Shop now <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10">
-              <Link href="/products">Browse all</Link>
+            <Button render={<Link href="/" />} nativeButton={false} size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10">
+              Browse all
             </Button>
           </div>
         </div>

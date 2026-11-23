@@ -33,7 +33,7 @@ export function BrandsCarousel() {
   return (
     <section className="container mx-auto px-4 py-10">
       <div className="text-center mb-6">
-        <p className="text-xs uppercase tracking-wider text-muted-foreground">Nos marques</p>
+        <p className="text-xs uppercase tracking-wider text-muted-foreground">Trusted brands</p>
         <h2 className="text-xl md:text-2xl font-bold">Our brands</h2>
       </div>
       <div

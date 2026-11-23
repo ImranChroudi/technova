@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Globe, Mail, Share2, Rss, Video } from "lucide-react";
+import { Globe, Mail, Share2, Rss } from "lucide-react";
 
 const columns = [
   {

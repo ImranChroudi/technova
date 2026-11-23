@@ -97,13 +97,13 @@ export function PremiumProductCard({ product }: { product: ProductType }) {
           <p className="mt-1 text-[11px] text-muted-foreground">Ref: {product.sku}</p>
         )}
         <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-lg font-bold text-orange-500">{product.price} DH</span>
-          <span className="text-xs text-muted-foreground line-through">{originalPrice} DH</span>
+          <span className="text-lg font-bold text-primary">${product.price.toFixed(2)}</span>
+          <span className="text-xs text-muted-foreground line-through">${Number(originalPrice).toFixed(2)}</span>
         </div>
         <p className="text-[10px] text-muted-foreground mt-0.5">TTC</p>
 
-        <Button asChild className="mt-3 w-full h-9 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-lg">
-          <Link href={`/products/${product.product_id}`}>VIEW PRODUCT</Link>
+        <Button render={<Link href={`/products/${product.product_id}`} />} nativeButton={false} className="mt-3 w-full h-9 text-xs font-semibold rounded-lg">
+          View product
         </Button>
       </div>
     </div>

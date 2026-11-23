@@ -11,10 +11,10 @@ export default function ProductNotFound() {
         doesn&apos;t exist.
       </p>
       <Link
-        href="/products"
+        href="/"
         className="bg-primary hover:bg-primary/90 rounded-md px-4 py-2 text-white"
       >
-        Browse Products
+        Browse products
       </Link>
     </div>
   );

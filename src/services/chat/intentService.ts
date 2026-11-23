@@ -1,6 +1,6 @@
 import { getAIProvider } from "@/lib/ai/provider";
 import { searchProducts } from "./productSearchService";
-import type { SearchParams } from "./productSearchService";
+
 
 export type Intent = { keywords?: string; category?: string; minPrice?: number; maxPrice?: number; sort?: "relevance" | "price_asc" | "price_desc"; };
 

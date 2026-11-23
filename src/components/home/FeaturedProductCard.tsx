@@ -71,8 +71,8 @@ export function FeaturedProductCard({ product }: { product: ProductType }) {
           >
             <ShoppingCart className="h-3.5 w-3.5 mr-1" /> Add
           </Button>
-          <Button asChild size="sm" variant="outline" className="h-8 text-xs">
-            <Link href={`/products/${product.product_id}`}>View</Link>
+          <Button render={<Link href={`/products/${product.product_id}`} />} nativeButton={false} size="sm" variant="outline" className="h-8 text-xs">
+            View
           </Button>
         </div>
       </div>
