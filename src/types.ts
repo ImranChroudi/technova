@@ -4,6 +4,7 @@ export interface ProductType {
   description: string;
   price: number;
   image?: string;
+  images?: string[];
   stock: number;
   sku?: string;
   category_id?: number;

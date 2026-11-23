@@ -6,6 +6,7 @@ export interface CreateProductData {
   description: string;
   price: number;
   image?: string;
+  images?: string[];
   stock: number;
   sku?: string;
   category_id?: number;
@@ -93,6 +94,7 @@ export const adminProductService = {
         .from("products")
         .insert({
           ...productData,
+          images: productData.images ?? (productData.image ? [productData.image] : null),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -123,6 +125,7 @@ export const adminProductService = {
         .from("products")
         .update({
           ...productData,
+          images: productData.images ?? (productData.image ? [productData.image] : null),
           updated_at: new Date().toISOString(),
         })
         .eq("product_id", productId)

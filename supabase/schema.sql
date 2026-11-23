@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   description TEXT        NOT NULL,
   price       NUMERIC     NOT NULL CHECK (price > 0),
   image       VARCHAR,
+  images      TEXT[],
   stock       INTEGER     NOT NULL DEFAULT 0 CHECK (stock >= 0),
   sku         VARCHAR,
   category_id INTEGER     REFERENCES public.categories(id) ON DELETE SET NULL,

@@ -40,10 +40,13 @@ export default function ProductDetailsClient({
   //   product.product_id,
   // );
 
-  // Generate multiple images from the single image (mock data for demo)
-  const productImages = product.image
-    ? [product.image, product.image, product.image, product.image]
-    : ["/placeholder-product.jpg"];
+  // Use real images array if available, otherwise fall back to main image
+  const productImages =
+    Array.isArray(product.images) && product.images.length > 0
+      ? product.images
+      : product.image
+      ? [product.image]
+      : ["/placeholder-product.jpg"];
 
  
 

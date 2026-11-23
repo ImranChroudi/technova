@@ -39,6 +39,7 @@ interface FormData {
   description: string;
   price: string;
   image: string;
+  images: string[];
   stock: string;
   sku: string;
   category_id: string;
@@ -64,7 +65,9 @@ export function ProductFormModal({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);  // remote URLs only
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Use the query hook to fetch categories
@@ -82,22 +85,27 @@ export function ProductFormModal({
         description: product.description || "",
         price: product.price?.toString() || "",
         image: product.image || "",
+        images: product.images || (product.image ? [product.image] : []),
         stock: product.stock?.toString() || "",
         sku: product.sku || "",
         category_id: product.category_id?.toString() || "no-category",
       });
+      setImages(product.images || (product.image ? [product.image] : []));
     } else {
       setFormData({
         title: "",
         description: "",
         price: "",
         image: "",
+        images: [],
         stock: "",
         sku: "",
         category_id: "no-category",
       });
+      setImages([]);
     }
     setImageFile(null);
+    setPendingFiles([]);
     setImagePreview(product?.image || null);
     setErrors({});
   }, [product, isOpen]);
@@ -175,19 +183,29 @@ export function ProductFormModal({
 
     setLoading(true);
     try {
-      let imageUrl = formData.image.trim() || undefined;
+      setUploadingImage(true);
+      let mainImageUrl = formData.image.trim() || undefined;
       if (imageFile) {
-        setUploadingImage(true);
         const { uploadImage } = await import("@/services/storage/storageService");
-        imageUrl = await uploadImage(imageFile);
-        setUploadingImage(false);
+        mainImageUrl = await uploadImage(imageFile);
       }
+      const uploadedExtras: string[] = [];
+      for (const f of pendingFiles) {
+        const { uploadImage } = await import("@/services/storage/storageService");
+        uploadedExtras.push(await uploadImage(f));
+      }
+      setUploadingImage(false);
+
+      const finalImages = [...images, ...uploadedExtras];
+      if (mainImageUrl && !finalImages.includes(mainImageUrl)) finalImages.unshift(mainImageUrl);
+      const mainImage = mainImageUrl || finalImages[0] || undefined;
 
       const submitData: CreateProductData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
         price: parseFloat(formData.price),
-        image: imageUrl,
+        image: mainImage,
+        images: finalImages.length ? finalImages : undefined,
         stock: parseInt(formData.stock),
         sku: formData.sku.trim() || undefined,
         category_id:
@@ -363,37 +381,79 @@ export function ProductFormModal({
           </div>
 
           <div>
-            <Label htmlFor="image">Image</Label>
-            <div className="flex items-center gap-3">
-              {imagePreview && (
-                <img src={imagePreview} alt="preview" className="h-16 w-16 rounded-md object-cover border" />
-              )}
-              <div className="flex-1 space-y-2">
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => {
-                    handleInputChange("image", e.target.value);
-                    setImagePreview(e.target.value || null);
-                    setImageFile(null);
-                  }}
-                  placeholder="https://example.com/image.jpg (or upload below)"
-                />
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) {
-                      setImageFile(f);
-                      setImagePreview(URL.createObjectURL(f));
-                      handleInputChange("image", "");
-                    }
-                  }}
-                />
+            <Label>Images (up to 5)</Label>
+            {/* Remote images gallery */}
+            {images.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {images.map((img, i) => (
+                  <div key={i} className="relative">
+                    <img src={img} alt={`img-${i}`} className={`h-16 w-16 rounded-md object-cover border cursor-pointer ${i === 0 ? "ring-2 ring-primary" : ""}`} onClick={() => {
+                      const reordered = [img, ...images.filter((_, idx) => idx !== i)];
+                      setImages(reordered);
+                      setFormData((p) => ({ ...p, image: reordered[0] }));
+                      setImagePreview(reordered[0]);
+                    }} title="Click to set as main" />
+                    <button
+                      type="button"
+                      className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center"
+                      onClick={() => {
+                        const next = images.filter((_, idx) => idx !== i);
+                        setImages(next);
+                        setFormData((p) => ({ ...p, image: next[0] || "" }));
+                        setImagePreview(next[0] || null);
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
               </div>
-            </div>
-            {uploadingImage && <p className="text-xs text-muted-foreground mt-1">Uploading image...</p>}
+            )}
+            {/* Pending files preview */}
+            {pendingFiles.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {pendingFiles.map((f, i) => (
+                  <div key={i} className="relative">
+                    <img src={URL.createObjectURL(f)} alt={`pending-${i}`} className="h-16 w-16 rounded-md object-cover border opacity-70" />
+                    <button
+                      type="button"
+                      className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center"
+                      onClick={() => setPendingFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-[10px] text-muted-foreground mb-2">Click a saved image to set as main. First image is the main.</p>
+
+            <Input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                const remaining = 5 - (images.length + pendingFiles.length);
+                const toAdd = files.slice(0, Math.max(0, remaining));
+                setPendingFiles((prev) => [...prev, ...toAdd]);
+                if (toAdd.length && !imagePreview) setImagePreview(URL.createObjectURL(toAdd[0]));
+              }}
+            />
+            <Input
+              id="image"
+              value={formData.image}
+              onChange={(e) => {
+                handleInputChange("image", e.target.value);
+                if (e.target.value) {
+                  setImagePreview(e.target.value);
+                  setImages((prev) => (prev.length ? prev : [e.target.value]));
+                }
+              }}
+              placeholder="Or paste main image URL"
+              className="mt-2"
+            />
+            {uploadingImage && <p className="text-xs text-muted-foreground mt-1">Uploading images...</p>}
           </div>
 
           <DialogFooter>
