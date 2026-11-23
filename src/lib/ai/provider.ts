@@ -3,7 +3,7 @@ export interface AIProvider { chat(messages: ChatMessage[], options?: { json?: b
 
 class GeminiProvider implements AIProvider {
   private apiKey = process.env.GEMINI_API_KEY || "";
-  private model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+  private model = process.env.GEMINI_MODEL || "gemini-flash-lite-latest";
   private baseUrl = "https://generativelanguage.googleapis.com/v1beta";
 
   async chat(messages: ChatMessage[], options?: { json?: boolean }) {
