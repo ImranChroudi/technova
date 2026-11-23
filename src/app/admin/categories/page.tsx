@@ -198,9 +198,10 @@ export default function AdminCategoriesPage() {
                 onChange={(e) => setForm({ ...form, parent_id: e.target.value ? Number(e.target.value) : null })}
               />
               {imagePreview && <img src={imagePreview} alt="preview" className="h-20 w-20 rounded-md object-cover border" />}
-              <Input
+              <input
                 type="file"
                 accept="image/*"
+                className="block w-full text-sm text-muted-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-primary file:cursor-pointer"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) {
@@ -208,6 +209,7 @@ export default function AdminCategoriesPage() {
                     setImagePreview(URL.createObjectURL(f));
                     setForm({ ...form, image: "" });
                   }
+                  e.target.value = "";
                 }}
               />
               <Input
@@ -243,9 +245,10 @@ export default function AdminCategoriesPage() {
                 onChange={(e) => setForm({ ...form, parent_id: e.target.value ? Number(e.target.value) : null })}
               />
               {imagePreview && <img src={imagePreview} alt="preview" className="h-20 w-20 rounded-md object-cover border" />}
-              <Input
+              <input
                 type="file"
                 accept="image/*"
+                className="block w-full text-sm text-muted-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-primary file:cursor-pointer"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) {
@@ -253,6 +256,7 @@ export default function AdminCategoriesPage() {
                     setImagePreview(URL.createObjectURL(f));
                     setForm({ ...form, image: "" });
                   }
+                  e.target.value = "";
                 }}
               />
               <Input

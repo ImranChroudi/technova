@@ -18,6 +18,7 @@ import {
 } from "@/services/admin/adminProductService";
 import { useCategories } from "@/hooks/queries";
 import { toast } from "sonner";
+import { Loader2, Sparkles } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -232,13 +233,21 @@ export function ProductFormModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md relative">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             {product ? "Edit product details" : "Create a new product"}
           </DialogDescription>
         </DialogHeader>
+
+        {enhancing && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-lg bg-background/80 backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm font-medium">Enhancing product with AI…</p>
+            <p className="text-xs text-muted-foreground">Analyzing title, description & price</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex justify-end">
@@ -247,9 +256,20 @@ export function ProductFormModal({
               variant="outline"
               size="sm"
               onClick={handleEnhance}
-              disabled={enhancing}
+              disabled={enhancing || loading}
+              className="gap-2"
             >
-              {enhancing ? "Enhancing..." : "✨ Enhance with AI"}
+              {enhancing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Enhancing…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Enhance with AI
+                </>
+              )}
             </Button>
           </div>
 
@@ -428,16 +448,18 @@ export function ProductFormModal({
             )}
             <p className="text-[10px] text-muted-foreground mb-2">Click a saved image to set as main. First image is the main.</p>
 
-            <Input
+            <input
               type="file"
               accept="image/*"
               multiple
+              className="block w-full text-sm text-muted-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-primary file:cursor-pointer"
               onChange={(e) => {
                 const files = Array.from(e.target.files || []);
                 const remaining = 5 - (images.length + pendingFiles.length);
                 const toAdd = files.slice(0, Math.max(0, remaining));
                 setPendingFiles((prev) => [...prev, ...toAdd]);
                 if (toAdd.length && !imagePreview) setImagePreview(URL.createObjectURL(toAdd[0]));
+                e.target.value = "";
               }}
             />
             <Input
@@ -465,7 +487,7 @@ export function ProductFormModal({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || enhancing}>
               {loading ? "Saving..." : product ? "Update" : "Create"}
             </Button>
           </DialogFooter>
