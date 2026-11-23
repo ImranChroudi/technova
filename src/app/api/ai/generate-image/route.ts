@@ -1,63 +1,96 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+const V2FUN_BASE = "https://api.v2fun.ai/api/v1";
+const API_KEY = process.env.V2FUN_API_KEY || process.env.AI_MODEL_GENERATION_IMAGES || "";
+
 export async function POST(req: NextRequest) {
   try {
     const { prompt } = await req.json();
     if (!prompt || typeof prompt !== "string") {
       return NextResponse.json({ error: "Missing prompt" }, { status: 400 });
     }
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: "No Gemini API key configured (GEMINI_API_KEY)" }, { status: 400 });
+    if (!API_KEY) {
+      return NextResponse.json({ error: "No V2Fun API key configured (V2FUN_API_KEY)" }, { status: 400 });
     }
 
-    const model = process.env.GEMINI_IMAGE_MODEL || "gemini-2.0-flash-preview-image-generation";
+    const fullPrompt = `${prompt}. Clean uniform background color with a soft natural shadow under the product, professional e-commerce product photography, studio lighting, high quality.`;
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
-        }),
+    // 1. Create image generation task
+    const createRes = await fetch(`${V2FUN_BASE}/images/generations`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: fullPrompt,
+        model: process.env.V2FUN_IMAGE_MODEL || "gpt-image-2",
+        size: "1024x1024",
+        block: true,
+      }),
+    });
+
+    if (!createRes.ok) {
+      const errText = await createRes.text();
+      console.error("V2Fun gen failed:", createRes.status, errText);
+      return NextResponse.json({ error: `Image generation failed: ${createRes.status} ${errText}` }, { status: 500 });
+    }
+
+    let task = await createRes.json();
+
+    // 2. Poll until completed
+    const taskUuid = task.task_uuid;
+    let attempts = 0;
+    while (task.status !== "COMPLETED" && task.status !== "FAILED" && attempts < 30) {
+      await new Promise((r) => setTimeout(r, 2000));
+      const pollRes = await fetch(`${V2FUN_BASE}/images/generations/${taskUuid}`, {
+        headers: { "Authorization": `Bearer ${API_KEY}` },
+      });
+      if (!pollRes.ok) {
+        const errText = await pollRes.text();
+        console.error("V2Fun poll failed:", pollRes.status, errText);
+        break;
       }
+      task = await pollRes.json();
+      attempts++;
+    }
+
+    if (task.status !== "COMPLETED") {
+      return NextResponse.json({ error: `Task not completed (status: ${task.status})` }, { status: 500 });
+    }
+
+    // 3. Get download URL
+    const downloadUrl = task?.metadata?.downloads?.[0]?.download_url;
+    if (!downloadUrl) {
+      // maybe result contains relative paths; try constructing
+      const rel = task?.result?.[0];
+      if (!rel) return NextResponse.json({ error: "No image URL returned", raw: task }, { status: 500 });
+      // fallback: can't download, return relative as-is
+      return NextResponse.json({ url: `https://asset.v2fun.ai/${rel}` });
+    }
+
+    // 4. Download image bytes
+    const imgRes = await fetch(downloadUrl);
+    if (!imgRes.ok) {
+      return NextResponse.json({ error: `Failed to download result: ${imgRes.status}` }, { status: 500 });
+    }
+    const arrayBuffer = await imgRes.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // 5. Upload to Supabase Storage
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
-
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error("Gemini image gen failed:", res.status, errText);
-      return NextResponse.json({ error: `Image generation failed: ${res.status} ${errText}` }, { status: 500 });
-    }
-
-    const data = await res.json();
-    const parts = data?.candidates?.[0]?.content?.parts ?? [];
-    const imgPart = parts.find((p: any) => p.inlineData);
-    if (!imgPart) {
-      return NextResponse.json({ error: "No image returned", raw: data }, { status: 500 });
-    }
-
-    const { mimeType, data: base64 } = imgPart.inlineData;
-    const buffer = Buffer.from(base64, "base64");
-    const ext = mimeType?.includes("png") ? "png" : "jpg";
-
-    // Upload to Supabase Storage using service role key
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const supabase = createClient(supabaseUrl, serviceKey);
-
-    const path = `ai/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const path = `ai/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
     const { error: upErr } = await supabase.storage
       .from("product-images")
-      .upload(path, buffer, { contentType: mimeType || "image/png", upsert: false });
+      .upload(path, buffer, { contentType: "image/png", upsert: false });
 
     if (upErr) {
       console.error("Storage upload failed:", upErr);
-      // Fallback: return data URL
-      return NextResponse.json({ url: `data:${mimeType};base64,${base64}` });
+      return NextResponse.json({ url: `data:image/png;base64,${buffer.toString("base64")}` });
     }
 
     const { data: pub } = supabase.storage.from("product-images").getPublicUrl(path);
