@@ -17,8 +17,6 @@ import {
   ProductWithDetails,
 } from "@/services/admin/adminProductService";
 import { useCategories } from "@/hooks/queries";
-import { toast } from "sonner";
-import { Loader2, Sparkles } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -26,14 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface ProductFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: CreateProductData) => Promise<void>;
-  product?: ProductWithDetails | null;
-  title: string;
-}
+import { toast } from "sonner";
+import { Loader2, Sparkles, ImageIcon } from "lucide-react";
 
 interface FormData {
   title: string;
@@ -52,12 +44,19 @@ export function ProductFormModal({
   onSubmit,
   product,
   title,
-}: ProductFormModalProps) {
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: CreateProductData) => Promise<void>;
+  product?: ProductWithDetails | null;
+  title: string;
+}) {
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
     price: "",
     image: "",
+    images: [],
     stock: "",
     sku: "",
     category_id: "no-category",
@@ -68,10 +67,9 @@ export function ProductFormModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [images, setImages] = useState<string[]>([]);  // remote URLs only
+  const [images, setImages] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Use the query hook to fetch categories
   const {
     data: categories,
     isLoading: categoriesLoading,
@@ -113,35 +111,25 @@ export function ProductFormModal({
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-
-    if (!formData.title.trim()) {
-      newErrors.title = "Title is required";
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = "Description is required";
-    }
-
-    if (!formData.price.trim()) {
-      newErrors.price = "Price is required";
-    } else {
+    if (!formData.title.trim()) newErrors.title = "Title is required";
+    if (!formData.description.trim()) newErrors.description = "Description is required";
+    if (!formData.price.trim()) newErrors.price = "Price is required";
+    else {
       const price = parseFloat(formData.price);
-      if (isNaN(price) || price <= 0) {
-        newErrors.price = "Price must be a positive number";
-      }
+      if (isNaN(price) || price <= 0) newErrors.price = "Price must be a positive number";
     }
-
-    if (!formData.stock.trim()) {
-      newErrors.stock = "Stock is required";
-    } else {
+    if (!formData.stock.trim()) newErrors.stock = "Stock is required";
+    else {
       const stock = parseInt(formData.stock);
-      if (isNaN(stock) || stock < 0) {
-        newErrors.stock = "Stock must be a non-negative number";
-      }
+      if (isNaN(stock) || stock < 0) newErrors.stock = "Stock must be a non-negative number";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const handleEnhance = async () => {
@@ -177,11 +165,7 @@ export function ProductFormModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setLoading(true);
     try {
       setUploadingImage(true);
@@ -214,208 +198,66 @@ export function ProductFormModal({
             ? parseInt(formData.category_id)
             : undefined,
       };
-
       await onSubmit(submitData);
     } catch (error) {
       console.error("Error submitting product:", error);
     } finally {
       setLoading(false);
+      setUploadingImage(false);
     }
   };
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
-  };
+  const allPreviews = [...images, ...pendingFiles.map((f) => URL.createObjectURL(f))];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md relative">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            {product ? "Edit product details" : "Create a new product"}
-          </DialogDescription>
-        </DialogHeader>
-
+      <DialogContent className="max-w-2xl relative p-0 overflow-hidden">
         {enhancing && (
-          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-lg bg-background/80 backdrop-blur-sm">
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-sm font-medium">Enhancing product with AI…</p>
             <p className="text-xs text-muted-foreground">Analyzing title, description & price</p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleEnhance}
-              disabled={enhancing || loading}
-              className="gap-2"
-            >
-              {enhancing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Enhancing…
-                </>
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          {/* Left: image gallery */}
+          <div className="bg-muted/30 p-6 flex flex-col gap-4 border-b md:border-b-0 md:border-r">
+            <DialogHeader>
+              <DialogTitle className="text-xl">{title}</DialogTitle>
+              <DialogDescription>Manage product images and details</DialogDescription>
+            </DialogHeader>
+
+            <div className="relative aspect-square rounded-xl overflow-hidden bg-muted border">
+              {imagePreview ? (
+                <img src={imagePreview} alt="preview" className="h-full w-full object-contain" />
               ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  Enhance with AI
-                </>
-              )}
-            </Button>
-          </div>
-
-          <div>
-            <Label htmlFor="title">Product Title *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => handleInputChange("title", e.target.value)}
-              placeholder="Enter product title"
-              className={
-                errors.title
-                  ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500"
-                  : ""
-              }
-            />
-            {errors.title && (
-              <p className="mt-1 text-sm text-rose-600">{errors.title}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="description">Description *</Label>
-            <textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              placeholder="Enter product description"
-              rows={3}
-              className={`w-full rounded-md border px-3 py-2 focus:ring-2 focus:outline-none ${
-                errors.description
-                  ? "border-rose-500 focus:ring-rose-500"
-                  : "border-slate-300 focus:ring-blue-500"
-              }`}
-            />
-            {errors.description && (
-              <p className="mt-1 text-sm text-rose-600">{errors.description}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="price">Price ($) *</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.price}
-                onChange={(e) => handleInputChange("price", e.target.value)}
-                placeholder="0.00"
-                className={
-                  errors.price
-                    ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500"
-                    : ""
-                }
-              />
-              {errors.price && (
-                <p className="mt-1 text-sm text-rose-600">{errors.price}</p>
+                <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground">
+                  <ImageIcon className="h-10 w-10 mb-2 opacity-40" />
+                  <p className="text-xs">No image</p>
+                </div>
               )}
             </div>
 
-            <div>
-              <Label htmlFor="stock">Stock *</Label>
-              <Input
-                id="stock"
-                type="number"
-                min="0"
-                value={formData.stock}
-                onChange={(e) => handleInputChange("stock", e.target.value)}
-                placeholder="0"
-                className={
-                  errors.stock
-                    ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500"
-                    : ""
-                }
-              />
-              {errors.stock && (
-                <p className="mt-1 text-sm text-rose-600">{errors.stock}</p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="sku">SKU</Label>
-            <Input
-              id="sku"
-              value={formData.sku}
-              onChange={(e) => handleInputChange("sku", e.target.value)}
-              placeholder="Product SKU (optional)"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="category">Category</Label>
-            {categoriesError && (
-              <div className="border-destructive/30 bg-destructive/10 mt-1 mb-2 space-y-2 rounded-md border p-2 text-sm">
-                <p className="text-destructive">{categoriesError.message}</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="cursor-pointer"
-                  onClick={() => void refetchCategories()}
-                >
-                  Retry categories
-                </Button>
-              </div>
-            )}
-            <Select
-              value={formData.category_id}
-              onValueChange={(value) =>
-                handleInputChange("category_id", value ?? "")
-              }
-              disabled={categoriesLoading || !!categoriesError}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no-category">No category</SelectItem>
-                {categories?.map((category) => (
-                  <SelectItem key={category.id} value={category.id.toString()}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Images (up to 5)</Label>
-            {/* Remote images gallery */}
             {images.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2">
+              <div className="flex flex-wrap gap-2">
                 {images.map((img, i) => (
-                  <div key={i} className="relative">
-                    <img src={img} alt={`img-${i}`} className={`h-16 w-16 rounded-md object-cover border cursor-pointer ${i === 0 ? "ring-2 ring-primary" : ""}`} onClick={() => {
-                      const reordered = [img, ...images.filter((_, idx) => idx !== i)];
-                      setImages(reordered);
-                      setFormData((p) => ({ ...p, image: reordered[0] }));
-                      setImagePreview(reordered[0]);
-                    }} title="Click to set as main" />
+                  <div key={i} className="relative group">
+                    <img
+                      src={img}
+                      alt={`img-${i}`}
+                      className={`h-14 w-14 rounded-md object-cover border cursor-pointer transition ${i === 0 ? "ring-2 ring-primary" : "opacity-80 hover:opacity-100"}`}
+                      onClick={() => {
+                        const reordered = [img, ...images.filter((_, idx) => idx !== i)];
+                        setImages(reordered);
+                        setFormData((p) => ({ ...p, image: reordered[0] }));
+                        setImagePreview(reordered[0]);
+                      }}
+                      title="Click to set as main"
+                    />
                     <button
                       type="button"
-                      className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center"
+                      className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => {
                         const next = images.filter((_, idx) => idx !== i);
                         setImages(next);
@@ -429,69 +271,169 @@ export function ProductFormModal({
                 ))}
               </div>
             )}
-            {/* Pending files preview */}
-            {pendingFiles.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2">
-                {pendingFiles.map((f, i) => (
-                  <div key={i} className="relative">
-                    <img src={URL.createObjectURL(f)} alt={`pending-${i}`} className="h-16 w-16 rounded-md object-cover border opacity-70" />
-                    <button
-                      type="button"
-                      className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center"
-                      onClick={() => setPendingFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <p className="text-[10px] text-muted-foreground mb-2">Click a saved image to set as main. First image is the main.</p>
 
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              className="block w-full text-sm text-muted-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-primary file:cursor-pointer"
-              onChange={(e) => {
-                const files = Array.from(e.target.files || []);
-                const remaining = 5 - (images.length + pendingFiles.length);
-                const toAdd = files.slice(0, Math.max(0, remaining));
-                setPendingFiles((prev) => [...prev, ...toAdd]);
-                if (toAdd.length && !imagePreview) setImagePreview(URL.createObjectURL(toAdd[0]));
-                e.target.value = "";
-              }}
-            />
-            <Input
-              id="image"
-              value={formData.image}
-              onChange={(e) => {
-                handleInputChange("image", e.target.value);
-                if (e.target.value) {
-                  setImagePreview(e.target.value);
-                  setImages((prev) => (prev.length ? prev : [e.target.value]));
-                }
-              }}
-              placeholder="Or paste main image URL"
-              className="mt-2"
-            />
-            {uploadingImage && <p className="text-xs text-muted-foreground mt-1">Uploading images...</p>}
+            <div className="space-y-2">
+              <Label className="text-xs">Upload images (up to 5)</Label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="block w-full text-xs text-muted-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-primary file:cursor-pointer"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  const remaining = 5 - (images.length + pendingFiles.length);
+                  const toAdd = files.slice(0, Math.max(0, remaining));
+                  setPendingFiles((prev) => [...prev, ...toAdd]);
+                  if (toAdd.length && !imagePreview) setImagePreview(URL.createObjectURL(toAdd[0]));
+                  e.target.value = "";
+                }}
+              />
+              <Input
+                value={formData.image}
+                onChange={(e) => {
+                  handleInputChange("image", e.target.value);
+                  if (e.target.value) {
+                    setImagePreview(e.target.value);
+                    setImages((prev) => (prev.length ? prev : [e.target.value]));
+                  }
+                }}
+                placeholder="Or paste image URL"
+                className="text-xs"
+              />
+            </div>
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading || enhancing}>
-              {loading ? "Saving..." : product ? "Update" : "Create"}
-            </Button>
-          </DialogFooter>
-        </form>
+          {/* Right: form fields */}
+          <div className="p-6 space-y-4 overflow-y-auto max-h-[70vh]">
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleEnhance}
+                disabled={enhancing || loading}
+                className="gap-2"
+              >
+                {enhancing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Enhancing…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Enhance with AI
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <div>
+              <Label htmlFor="title">Product Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                placeholder="Enter product title"
+                className={errors.title ? "border-rose-500" : ""}
+              />
+              {errors.title && <p className="mt-1 text-sm text-rose-600">{errors.title}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="description">Description *</Label>
+              <textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange("description", e.target.value)}
+                placeholder="Enter product description"
+                rows={4}
+                className={`w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none ${
+                  errors.description ? "border-rose-500 focus:ring-rose-500" : "border-slate-300 focus:ring-blue-500"
+                }`}
+              />
+              {errors.description && <p className="mt-1 text-sm text-rose-600">{errors.description}</p>}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="price">Price (DH) *</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price}
+                  onChange={(e) => handleInputChange("price", e.target.value)}
+                  placeholder="0.00"
+                  className={errors.price ? "border-rose-500" : ""}
+                />
+                {errors.price && <p className="mt-1 text-sm text-rose-600">{errors.price}</p>}
+              </div>
+              <div>
+                <Label htmlFor="stock">Stock *</Label>
+                <Input
+                  id="stock"
+                  type="number"
+                  min="0"
+                  value={formData.stock}
+                  onChange={(e) => handleInputChange("stock", e.target.value)}
+                  placeholder="0"
+                  className={errors.stock ? "border-rose-500" : ""}
+                />
+                {errors.stock && <p className="mt-1 text-sm text-rose-600">{errors.stock}</p>}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="sku">SKU</Label>
+              <Input
+                id="sku"
+                value={formData.sku}
+                onChange={(e) => handleInputChange("sku", e.target.value)}
+                placeholder="Product SKU (optional)"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="category">Category</Label>
+              {categoriesError && (
+                <div className="border-destructive/30 bg-destructive/10 mt-1 mb-2 space-y-2 rounded-md border p-2 text-sm">
+                  <p className="text-destructive">{categoriesError.message}</p>
+                  <Button type="button" variant="outline" size="sm" onClick={() => void refetchCategories()}>
+                    Retry categories
+                  </Button>
+                </div>
+              )}
+              <Select
+                value={formData.category_id}
+                onValueChange={(value) => handleInputChange("category_id", value ?? "")}
+                disabled={categoriesLoading || !!categoriesError}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no-category">No category</SelectItem>
+                  {categories?.map((category) => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" onClick={onClose} disabled={loading || enhancing}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading || enhancing}>
+                {loading ? "Saving..." : product ? "Update" : "Create"}
+              </Button>
+            </DialogFooter>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
