@@ -19,8 +19,11 @@ export function ReviewSummary({ productId }: { productId: string }) {
   const [count, setCount] = useState(0);
   const [hasReviews, setHasReviews] = useState<boolean | null>(null);
 
+  const [started, setStarted] = useState(false);
+
   const load = async (force = false) => {
     setLoading(true);
+    setStarted(true);
     try {
       const res = await fetch(`/api/ai/summarize-reviews${force ? "?force=1" : ""}`, {
         method: "POST",
@@ -29,6 +32,9 @@ export function ReviewSummary({ productId }: { productId: string }) {
       });
       const data = await res.json();
       setCount(data.count ?? 0);
+      if (data.error) {
+        toast.error(`AI failed: ${data.error}`);
+      }
       if (data.summary) {
         try {
           setSummary(JSON.parse(data.summary));
@@ -47,12 +53,27 @@ export function ReviewSummary({ productId }: { productId: string }) {
     }
   };
 
-  useEffect(() => {
-    load();
-  }, [productId]);
+  // Do not auto-generate on mount; wait until user clicks (products already shown).
 
   if (hasReviews === false) return null;
-  if (!summary && !loading) return null;
+
+  // Not started yet: show a trigger button (don't auto-generate before products shown)
+  if (!started && !loading) {
+    return (
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">AI Review Summary</span>
+            <span className="text-xs text-muted-foreground">({count || "available"} reviews)</span>
+          </div>
+          <Button size="sm" onClick={() => load(true)} disabled={loading}>
+            Generate summary
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-primary/20 bg-primary/5">

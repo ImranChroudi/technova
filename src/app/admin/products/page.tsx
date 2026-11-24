@@ -57,10 +57,17 @@ export default function AdminProductsPage() {
 
   const handleCreateProduct = async (productData: CreateProductData) => {
     try {
-      await adminProductService.createProduct(productData);
+      const created = await adminProductService.createProduct(productData);
       toast.success("Product created successfully");
       setShowCreateModal(false);
       fetchProducts();
+      if (created?.product_id) {
+        fetch("/api/generate-embeddings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ product_id: created.product_id }),
+        }).catch(() => {});
+      }
     } catch (error) {
       console.error("Error creating product:", error);
       toast.error("Failed to create product");
