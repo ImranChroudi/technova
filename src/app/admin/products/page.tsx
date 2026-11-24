@@ -62,11 +62,26 @@ export default function AdminProductsPage() {
       setShowCreateModal(false);
       fetchProducts();
       if (created?.product_id) {
-        fetch("/api/generate-embeddings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ product_id: created.product_id }),
-        }).catch(() => {});
+        // Generate embedding (awaited so errors surface)
+        try {
+          const embRes = await fetch("/api/generate-embeddings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ product_id: created.product_id }),
+          });
+          const embData = await embRes.json();
+          if (embData?.results?.some((r: any) => r.ok)) {
+            toast.success("Product embedding generated");
+          } else if (embData?.error) {
+            toast.error(`Embedding failed: ${embData.error}`);
+          } else if (embData?.results?.length === 0) {
+            toast.info("No images to embed (add an image first)");
+          } else {
+            toast.error(`Embedding failed: ${embData.results?.[0]?.error || "unknown"}`);
+          }
+        } catch (e) {
+          console.error("Embedding request failed:", e);
+        }
       }
     } catch (error) {
       console.error("Error creating product:", error);
@@ -83,6 +98,12 @@ export default function AdminProductsPage() {
       toast.success("Product updated successfully");
       setEditingProduct(null);
       fetchProducts();
+      // regenerate embeddings (images may have changed)
+      fetch("/api/generate-embeddings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: productId }),
+      }).catch(() => {});
     } catch (error) {
       console.error("Error updating product:", error);
       toast.error("Failed to update product");

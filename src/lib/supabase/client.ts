@@ -31,6 +31,8 @@ export const supabase = createBrowserClient<Database>(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
+      // Avoid "Lock was released because another request stole it" under concurrent calls
+      lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => fn(),
     },
   },
 );
@@ -57,6 +59,7 @@ export function createClientSupabase() {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
+        lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => fn(),
       },
     },
   );

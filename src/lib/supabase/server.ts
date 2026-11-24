@@ -24,6 +24,9 @@ export const createServerSupabase = async () => {
           }
         },
       },
+      auth: {
+        lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => fn(),
+      },
     }
   );
 };

@@ -20,6 +20,8 @@ export async function POST(req: NextRequest) {
     const results: { product_id: string; ok: boolean; error?: string }[] = [];
 
     for (const p of products ?? []) {
+      // remove stale embeddings for this product
+      await supabase.from("product_image_embeddings").delete().eq("product_id", p.product_id);
       const imgs = (p.images && p.images.length ? p.images : p.image ? [p.image] : []).slice(0, 3);
       for (const img of imgs) {
         try {
