@@ -5,6 +5,7 @@ export interface ProductType {
   price: number;
   image?: string;
   images?: string[];
+  ai_review_summary?: string;
   stock: number;
   sku?: string;
   category_id?: number;

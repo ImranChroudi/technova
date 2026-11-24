@@ -128,3 +128,14 @@ INSERT INTO public.reviews (id, product_id, user_id, rating, comment, created_at
   (5, '33333333-3333-3333-3333-333333333312', '22222222-2222-2222-2222-222222222222', 4, 'Warm and soft.', now() - interval '1 day', now())
 ON CONFLICT (id) DO NOTHING;
 SELECT setval(pg_get_serial_sequence('public.reviews','id'), (SELECT MAX(id) FROM public.reviews));
+
+-- Extra reviews for AI summarization testing
+INSERT INTO public.reviews (id, product_id, user_id, rating, comment, created_at, updated_at) VALUES
+  (6, '33333333-3333-3333-3333-333333333301', '22222222-2222-2222-2222-222222222222', 4, 'Great sound but a bit heavy for long sessions.', now() - interval '3 days', now()),
+  (7, '33333333-3333-3333-3333-333333333301', '11111111-1111-1111-1111-111111111111', 5, 'Best headphones I have owned. Battery lasts forever.', now() - interval '1 day', now()),
+  (8, '33333333-3333-3333-3333-333333333301', '22222222-2222-2222-2222-222222222222', 3, 'Good but the price is high for what you get.', now() - interval '6 days', now()),
+  (9, '33333333-3333-3333-3333-333333333302', '22222222-2222-2222-2222-222222222222', 5, 'Love the fitness tracking and display.', now() - interval '2 days', now()),
+  (10, '33333333-3333-3333-3333-333333333302', '11111111-1111-1111-1111-111111111111', 2, 'Battery drains too fast, disappointed.', now() - interval '4 days', now()),
+  (11, '33333333-3333-3333-3333-333333333304', '22222222-2222-2222-2222-222222222222', 4, 'Stylish and warm, fits true to size.', now() - interval '1 day', now())
+ON CONFLICT (id) DO NOTHING;
+SELECT setval(pg_get_serial_sequence('public.reviews','id'), (SELECT MAX(id) FROM public.reviews));

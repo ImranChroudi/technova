@@ -1,0 +1,104 @@
+Here's a curated list of AI features worth adding, beyond what's already implemented (chatbot, AI-enhance, image gen, bg removal, personalization). I've grouped by effort/impact and noted how each fits your stack.
+
+## Already implemented ✅
+- AI shopping assistant chatbot (text + voice, RAG-style)
+- AI product enhancement (title/description/price)
+- AI image generation (V2Fun)
+- AI background removal (V2Fun)
+- Personalized recommendations (category affinity from events)
+- AI category suggestions when no products match
+
+---
+
+## Tier 1 — Quick wins (1–2 days each, high value)
+
+### 1. AI Review Summarization
+**What:** On product detail page, show "AI summary: 4.2★ — customers praise comfort and battery; complain about size." Generated from existing reviews.
+**How:** `/api/ai/summarize-reviews` → fetch reviews → LLM → cache in `products.ai_review_summary` (new column). Refresh when review count changes.
+**Value:** Saves shoppers reading 50 reviews.
+
+### 2. AI Auto-Categorize & Tag on Product Creation
+**What:** When admin adds a product, AI suggests category + tags from title/description. Already partially there via "Enhance with AI" — extend to category.
+**How:** Extend `/api/ai/enhance-product` to return `suggested_category_id` and `tags[]`. Pre-select in the form.
+
+### 3. AI Alt-Text Generation for Images
+**What:** Generate accessibility alt text for product images automatically.
+**How:** V2Fun image captioning endpoint (`/images/captions`) or Gemini vision → store in `products.image_alt`. Improves SEO + a11y.
+
+### 4. AI SEO Meta Generation
+**What:** Auto-generate `<title>` and meta description for product pages.
+**How:** LLM from product data → store in `products.seo_title`, `seo_description` → use in `generateMetadata`.
+
+### 5. AI Sentiment Flagging on Reviews
+**What:** Flag reviews with negative sentiment for admin moderation.
+**How:** On review insert, call LLM → store `sentiment` (positive/neutral/negative) in `reviews` table. Admin filters by negative.
+
+---
+
+## Tier 2 — Medium effort (3–5 days, high differentiation)
+
+### 6. Visual Search ("Find similar")
+**What:** Customer uploads an image → find visually similar products.
+**How:** Generate image embedding (Gemini/OpenAI vision or V2Fun) → store in `products.embedding` (pgvector) → cosine similarity search. Supabase supports pgvector.
+**Value:** Big UX win for fashion/home.
+
+### 7. AI Size/Fit Recommender
+**What:** "Will this fit me?" — ask height/weight/usual size → recommend size.
+**How:** LLM with product size chart + user input → returns size + reasoning. Store size charts in products.
+
+### 8. AI Dynamic Pricing Suggestions
+**What:** For admins: "Suggested price: 89 DH (based on similar products and stock)". 
+**How:** Already have similar-products context in enhance route — extend to return `suggested_price` with reasoning. Show as a hint badge in the form.
+
+### 9. AI Order Status Assistant (chatbot action)
+**What:** "Where is my order?" → chatbot fetches the user's order and replies with status/tracking.
+**How:** Extend `/api/chat` to detect intent "order_status" → query orders for the authenticated user → inject into reply. Requires passing `user_id` to chat.
+
+### 10. AI Email/Marketing Copy Generator (admin)
+**What:** Admin clicks "Generate newsletter" → AI writes a promotional email from selected products.
+**How:** Admin page + LLM → preview → send via Resend/SMTP.
+
+---
+
+## Tier 3 — Advanced (1–2 weeks, major features)
+
+### 11. Multilingual Catalog (AI Translation)
+**What:** Translate product titles/descriptions to FR/AR/ES automatically.
+**How:** LLM translation → store in `product_translations` table → i18n routing. High value for Morocco (FR/AR).
+
+### 12. AI Fraud / Risk Scoring
+**What:** Score each order for fraud risk (unusual amount, new user, address mismatch).
+**How:** Rule-based + LLM analysis of order patterns → `orders.risk_score`. Admin sees flagged orders.
+
+### 13. AI Inventory Forecasting
+**What:** "You'll run out of X in 12 days at current sales rate."
+**How:** Aggregate order_items by product over time → simple trend projection (or LLM) → dashboard widget.
+
+### 14. AI Chatbot with Tool Calling (Agentic)
+**What:** Chatbot can actually add to cart, apply coupons, track orders — not just recommend.
+**How:** OpenAI/Gemini function calling → tools: `search_products`, `add_to_cart`, `get_order_status`. Execute server-side.
+
+### 15. AI Review Auto-Moderation
+**What:** Auto-approve/reject reviews based on spam/toxicity.
+**How:** LLM classification on review insert → `reviews.status` (pending/approved/rejected).
+
+---
+
+## Recommended next steps (pick 2–3)
+
+Given your stack and what's already built, the **highest ROI** next features are:
+
+1. **Review Summarization** (#1) — reuses reviews data, big UX win, easy.
+2. **AI Order Status in Chatbot** (#9) — chatbot already exists, just add a tool.
+3. **Visual Search** (#6) — differentiator, pgvector available in Supabase.
+4. **AI Auto-Categorize** (#2) — small extension of existing enhance route.
+
+## Commit message (if you implement any)
+```
+feat(ai): <feature name>
+
+- <what it does>
+- <files changed>
+```
+
+Want me to implement any of these? I'd suggest starting with **Review Summarization** + **AI Order Status in Chatbot** as the next batch.

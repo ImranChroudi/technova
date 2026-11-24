@@ -104,6 +104,8 @@ export function ProductFormModal({
   const [enhancing, setEnhancing] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [removingBg, setRemovingBg] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressLabel, setProgressLabel] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -217,6 +219,7 @@ export function ProductFormModal({
       return;
     }
     setGeneratingImage(true);
+    const interval = simulateProgress("Generating image…");
     try {
       const prompt = `${formData.title}. ${formData.description || ""}. Product photography, white background, high quality, e-commerce.`;
       const res = await fetch("/api/ai/generate-image", {
@@ -226,6 +229,7 @@ export function ProductFormModal({
       });
       const data = await res.json();
       if (data.url) {
+        setProgress(100);
         setImages((prev) => [data.url, ...prev].slice(0, 5));
         setFormData((p) => ({ ...p, image: data.url }));
         setImagePreview(data.url);
@@ -237,8 +241,22 @@ export function ProductFormModal({
       console.error(e);
       toast.error("Failed to generate image");
     } finally {
+      clearInterval(interval);
+      setTimeout(() => { setProgress(0); setProgressLabel(""); }, 600);
       setGeneratingImage(false);
     }
+  };
+
+  const simulateProgress = (label: string) => {
+    setProgress(0);
+    setProgressLabel(label);
+    let p = 0;
+    const interval = setInterval(() => {
+      p = Math.min(p + Math.random() * 8 + 2, 90);
+      setProgress(Math.round(p));
+      if (p >= 90) clearInterval(interval);
+    }, 400);
+    return interval;
   };
 
   const handleRemoveBg = async () => {
@@ -248,6 +266,7 @@ export function ProductFormModal({
       return;
     }
     setRemovingBg(true);
+    const interval = simulateProgress("Removing background…");
     try {
       const res = await fetch("/api/ai/remove-bg", {
         method: "POST",
@@ -256,6 +275,7 @@ export function ProductFormModal({
       });
       const data = await res.json();
       if (data.url) {
+        setProgress(100);
         setImages((prev) => [data.url, ...prev.filter((u) => u !== target)].slice(0, 5));
         setFormData((p) => ({ ...p, image: data.url }));
         setImagePreview(data.url);
@@ -267,6 +287,8 @@ export function ProductFormModal({
       console.error(e);
       toast.error("Failed to remove background");
     } finally {
+      clearInterval(interval);
+      setTimeout(() => { setProgress(0); setProgressLabel(""); }, 600);
       setRemovingBg(false);
     }
   };
@@ -496,6 +518,21 @@ export function ProductFormModal({
                   </>
                 )}
               </Button>
+
+              {(generatingImage || removingBg) && progress > 0 && (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{progressLabel}</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 

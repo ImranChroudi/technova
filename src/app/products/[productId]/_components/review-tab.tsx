@@ -12,6 +12,7 @@ import { Star } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { ReviewedCard } from "./reviewed-card";
+import { ReviewSummary } from "@/components/ai/ReviewSummary";
 import { useQueryClient } from "@tanstack/react-query";
 import { reviewKeys } from "@/hooks/queries";
 
@@ -116,7 +117,9 @@ export function ReviewTab({ product }: ProductDetailsClientProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <div className="space-y-4">
+      <ReviewSummary productId={product.product_id} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <Card>
         <CardContent className="p-6">
           <div className="mb-6 text-center">
@@ -275,6 +278,7 @@ export function ReviewTab({ product }: ProductDetailsClientProps) {
         {/* Reviews List */}
         <ReviewedCard productId={product.product_id} />
       </div>
+    </div>
     </div>
   );
 }
