@@ -9,6 +9,7 @@ import { ThemedToaster } from "@/components/ThemedToaster";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { SiteFooter } from "@/components/home/SiteFooter";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import { VisualSearch } from "@/components/VisualSearch";
 import { MainLayout } from "@/components/MainLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DemoBanner } from "@/components/DemoBanner";
@@ -51,6 +52,7 @@ export default function RootLayout({
                       <AnalyticsProvider>{children}</AnalyticsProvider>
                     </MainLayout>
                     <SiteFooter />
+                    <VisualSearch />
                     <ChatWidget />
                     <ThemedToaster />
                   </div>

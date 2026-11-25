@@ -7,7 +7,7 @@ import { PersonalizedSections } from "@/components/PersonalizedSections";
 import { HomeHeroSection } from "@/components/home/HomeHeroSection";
 import { TrustBadges } from "@/components/TrustBadges";
 import { Newsletter } from "@/components/Newsletter";
-import { VisualSearch } from "@/components/VisualSearch";
+// VisualSearch is now a floating widget (rendered globally)
 
 export default function Home() {
   return (
@@ -36,7 +36,6 @@ export default function Home() {
             </Suspense>
           </section>
         </div>
-        <VisualSearch />
         <BrandsCarousel />
         <Newsletter />
       </div>
