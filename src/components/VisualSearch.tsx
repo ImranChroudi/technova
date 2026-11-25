@@ -1,11 +1,16 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, X, Upload, Loader2, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ProductType } from "@/types";
+import {
+  announceFloatingWidgetOpen,
+  onOtherFloatingWidgetOpen,
+  setFloatingWidgetOpen,
+} from "@/lib/ui/floating-widgets";
 
 export function VisualSearch() {
   const [open, setOpen] = useState(false);
@@ -15,6 +20,18 @@ export function VisualSearch() {
   const [results, setResults] = useState<(ProductType & { similarity?: number })[]>([]);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Close this panel when the chat panel opens, and vice versa.
+  useEffect(() => onOtherFloatingWidgetOpen("visual", () => setOpen(false)), []);
+  useEffect(() => {
+    setFloatingWidgetOpen("visual", open);
+    return () => setFloatingWidgetOpen("visual", false);
+  }, [open]);
+
+  const openPanel = () => {
+    announceFloatingWidgetOpen("visual");
+    setOpen(true);
+  };
 
   const handleFile = (f: File | null) => {
     if (!f) return;
@@ -60,7 +77,8 @@ export function VisualSearch() {
       {!open && (
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={openPanel}
+          data-floating-widget-button="true"
           aria-label="Visual search"
           title="Search by image"
           className="brand-gradient btn-glow fixed right-[86px] bottom-5 z-50 flex h-12 items-center gap-2 rounded-full pl-3.5 pr-4 text-white shadow-xl transition-transform hover:scale-105"

@@ -253,7 +253,8 @@
 
   /* Buttons & chips */
   .btn-glow {
-    @apply relative overflow-hidden shadow-[0_10px_24px_-10px_oklch(0.5_0.24_264/0.75)];
+    /* Do not set `position` here: floating widgets use `fixed` and would be overridden. */
+    @apply overflow-hidden shadow-[0_10px_24px_-10px_oklch(0.5_0.24_264/0.75)];
   }
   .btn-glow::after {
     content: "";
@@ -306,6 +307,13 @@
     scroll-behavior: auto !important;
     transition-duration: .01ms !important;
   }
+}
+
+/* Hide floating launcher buttons while a widget panel is open */
+body[data-floating-widget-open="true"] [data-floating-widget-button] {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.9);
 }
 
 /* Custom Toast Styling */

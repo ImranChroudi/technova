@@ -53,7 +53,7 @@ export function Newsletter() {
           <Button
             type="submit"
             disabled={loading}
-            className="btn-glow h-11 rounded-xl bg-white px-6 font-semibold text-primary hover:bg-white/90"
+            className="btn-glow relative h-11 rounded-xl bg-white px-6 font-semibold text-primary hover:bg-white/90"
           >
             {loading ? "Subscribing…" : "Subscribe"}
             {!loading && <ArrowRight className="ml-2 h-4 w-4" />}

@@ -9,6 +9,11 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import type { ProductType } from "@/types";
+import {
+  announceFloatingWidgetOpen,
+  onOtherFloatingWidgetOpen,
+  setFloatingWidgetOpen,
+} from "@/lib/ui/floating-widgets";
 
 type Msg = {
   id: string;
@@ -45,6 +50,18 @@ export function ChatWidget() {
   });
   const scrollRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
+
+  // Only one floating panel can be open at a time.
+  useEffect(() => onOtherFloatingWidgetOpen("chat", () => setOpen(false)), []);
+  useEffect(() => {
+    setFloatingWidgetOpen("chat", open);
+    return () => setFloatingWidgetOpen("chat", false);
+  }, [open]);
+
+  const openPanel = () => {
+    announceFloatingWidgetOpen("chat");
+    setOpen(true);
+  };
 
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
@@ -178,7 +195,8 @@ export function ChatWidget() {
       {!open && (
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={openPanel}
+          data-floating-widget-button="true"
           aria-label="Open chat"
           className="brand-gradient btn-glow fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition-transform hover:scale-105"
         >

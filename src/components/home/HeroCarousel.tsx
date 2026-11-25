@@ -152,7 +152,7 @@ export function HeroCarousel() {
                   render={<Link href={slide.href} />}
                   nativeButton={false}
                   size="lg"
-                  className="btn-glow rounded-full bg-white px-6 font-semibold text-primary hover:bg-white/90"
+                  className="btn-glow relative rounded-full bg-white px-6 font-semibold text-primary hover:bg-white/90"
                 >
                   {slide.cta} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>

@@ -363,7 +363,7 @@ export default function CategoryPage({
                   <Button
                     type="button"
                     onClick={() => setDrawerOpen(false)}
-                    className="btn-glow h-11 w-full rounded-full"
+                    className="btn-glow relative h-11 w-full rounded-full"
                   >
                     Show {visible.length} {visible.length === 1 ? "product" : "products"}
                     <ArrowRight className="ml-2 h-4 w-4" />
