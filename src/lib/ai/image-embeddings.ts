@@ -11,7 +11,13 @@ async function getExtractor() {
 
 export async function generateImageEmbedding(file: Blob): Promise<number[]> {
   const model = await getExtractor();
+
   const image = await RawImage.fromBlob(file);
+
   const output = await model(image);
-  return Array.from(output.data);
+
+  // Extract the embedding output (Supabase pattern)
+  const embedding = Array.from(output.data);
+
+  return embedding;
 }

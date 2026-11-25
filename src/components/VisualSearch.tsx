@@ -42,7 +42,9 @@ export function VisualSearch() {
       const res = await fetch("/api/search-by-image", { method: "POST", body: fd });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setResults(data.products ?? []);
+      const prods = data.products ?? [];
+      setResults(prods);
+      if (prods.length === 0) setError("No similar products found. Make sure embeddings are generated (Admin → Generate embeddings).");
     } catch (e: any) {
       setError(e?.message || "Search failed");
     } finally {

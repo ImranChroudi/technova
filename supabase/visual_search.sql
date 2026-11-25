@@ -9,17 +9,24 @@ CREATE TABLE IF NOT EXISTS public.product_image_embeddings (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   product_id UUID NOT NULL REFERENCES public.products(product_id) ON DELETE CASCADE,
   image_url TEXT NOT NULL,
+  model_name TEXT NOT NULL DEFAULT 'Xenova/clip-vit-base-patch32',
   embedding extensions.vector(512) NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (product_id, image_url)
 );
 
+-- HNSW index for fast cosine similarity search
+CREATE INDEX IF NOT EXISTS idx_pie_embedding_hnsw
+  ON public.product_image_embeddings
+  USING hnsw (embedding vector_cosine_ops);
+
 CREATE INDEX IF NOT EXISTS idx_pie_product ON public.product_image_embeddings (product_id);
--- IVFFlat index for fast similarity search (create after data is populated)
--- CREATE INDEX idx_pie_embedding ON public.product_image_embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 
 ALTER TABLE public.product_image_embeddings ENABLE ROW LEVEL SECURITY;
--- Public read for similarity search via RPC; writes only via service role (admin)
-CREATE POLICY "pie_select_all" ON public.product_image_embeddings FOR SELECT USING (true);
+
+-- Public read (similarity search via RPC); writes via service role only
+CREATE POLICY "pie_select_all" ON public.product_image_embeddings
+  FOR SELECT USING (true);
 
 CREATE OR REPLACE FUNCTION public.search_similar_images(
   query_embedding extensions.vector(512),
