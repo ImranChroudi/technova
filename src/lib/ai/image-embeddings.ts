@@ -17,7 +17,7 @@ export async function generateImageEmbedding(file: Blob): Promise<number[]> {
   const output = await model(image);
 
   // Extract the embedding output (Supabase pattern)
-  const embedding = Array.from(output.data);
+  const embedding = Array.from(output.data as ArrayLike<number>) as number[];
 
   return embedding;
 }

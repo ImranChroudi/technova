@@ -13,14 +13,8 @@ export function FeaturedProductCard({ product }: { product: ProductType }) {
   const { addToCart } = useCart();
   const [liked, setLiked] = useState(false);
 
-  const discount =
-    product.price && product.price > 0
-      ? Math.round((1 - product.price / (product.price * 1.25)) * 100)
-      : 0;
-  const originalPrice = product.price ? (product.price * 1.25).toFixed(2) : null;
-
   return (
-    <div className="group flex-shrink-0 w-[78%] sm:w-[48%] md:w-full snap-start rounded-2xl border bg-card p-3 shadow-sm hover:shadow-md transition-shadow">
+    <div className="panel panel-hover group w-[78%] flex-shrink-0 snap-start p-3 sm:w-[48%] md:w-full">
       <Link href={`/products/${product.product_id}`} className="block">
         <div className="relative aspect-square overflow-hidden rounded-xl bg-muted">
           <Image
@@ -41,11 +35,9 @@ export function FeaturedProductCard({ product }: { product: ProductType }) {
           >
             <Heart className={`h-4 w-4 ${liked ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
           </button>
-          {discount > 0 && (
-            <span className="absolute top-2 left-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
-              -{discount}%
-            </span>
-          )}
+          <span className="brand-gradient absolute top-2 left-2 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white">
+            Featured
+          </span>
         </div>
       </Link>
       <div className="mt-3 space-y-1">
@@ -55,14 +47,17 @@ export function FeaturedProductCard({ product }: { product: ProductType }) {
           </h3>
         </Link>
         <div className="flex items-baseline gap-2">
-          <span className="text-base font-bold text-primary">${product.price}</span>
-          {originalPrice && (
-            <span className="text-xs text-muted-foreground line-through">${originalPrice}</span>
+          <span className="text-base font-bold text-primary">
+            ${Number(product.price).toFixed(2)}
+          </span>
+          {product.stock === 0 && (
+            <span className="text-xs text-destructive">Sold out</span>
           )}
         </div>
         <div className="flex items-center gap-2 pt-1">
           <Button
             size="sm"
+            disabled={product.stock === 0}
             className="flex-1 h-8 text-xs"
             onClick={() => {
               addToCart(product);

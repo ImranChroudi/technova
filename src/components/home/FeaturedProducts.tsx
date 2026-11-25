@@ -18,11 +18,11 @@ export function FeaturedProducts() {
   if (featured.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border bg-card p-4 md:p-5 shadow-sm">
-      <div className="flex items-center justify-between mb-3">
+    <div className="panel h-full p-4 md:p-5">
+      <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">New arrivals</p>
-          <h2 className="text-lg md:text-xl font-bold">Featured products</h2>
+          <p className="eyebrow">Handpicked for you</p>
+          <h2 className="mt-1 text-lg font-bold md:text-xl">Featured products</h2>
         </div>
         <div className="flex gap-2">
           <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => scroll(-1)} aria-label="Previous">

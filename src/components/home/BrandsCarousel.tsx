@@ -31,25 +31,27 @@ export function BrandsCarousel() {
   const items = [...BRANDS, ...BRANDS];
 
   return (
-    <section className="container mx-auto px-4 py-10">
-      <div className="text-center mb-6">
-        <p className="text-xs uppercase tracking-wider text-muted-foreground">Trusted brands</p>
-        <h2 className="text-xl md:text-2xl font-bold">Our brands</h2>
+    <section className="section-pad container mx-auto px-4">
+      <div className="mb-6 text-center">
+        <p className="eyebrow">Trusted brands</p>
+        <h2 className="display-title mt-1">The names you know</h2>
       </div>
-      <div
-        ref={trackRef}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        className="flex gap-8 overflow-hidden whitespace-nowrap"
-      >
-        {items.map((b, i) => (
-          <div
-            key={i}
-            className="flex-shrink-0 flex items-center justify-center h-16 min-w-[120px] rounded-xl border bg-card px-6 text-lg font-semibold text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {b}
-          </div>
-        ))}
+      <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
+        <div
+          ref={trackRef}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          className="flex gap-4 overflow-hidden whitespace-nowrap"
+        >
+          {items.map((b, i) => (
+            <div
+              key={i}
+              className="panel flex h-16 min-w-[150px] flex-shrink-0 items-center justify-center px-6 text-base font-semibold tracking-tight text-muted-foreground transition-colors hover:text-primary"
+            >
+              {b}
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

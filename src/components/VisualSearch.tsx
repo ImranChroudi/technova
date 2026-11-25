@@ -63,10 +63,10 @@ export function VisualSearch() {
           onClick={() => setOpen(true)}
           aria-label="Visual search"
           title="Search by image"
-          className="fixed bottom-5 right-20 z-50 h-14 pl-4 pr-5 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+          className="brand-gradient btn-glow fixed right-[86px] bottom-5 z-50 flex h-12 items-center gap-2 rounded-full pl-3.5 pr-4 text-white shadow-xl transition-transform hover:scale-105"
         >
           <Camera className="h-5 w-5" />
-          <span className="text-sm font-medium whitespace-nowrap">Search by image</span>
+          <span className="whitespace-nowrap text-sm font-semibold">Search by image</span>
         </button>
       )}
 

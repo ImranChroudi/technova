@@ -16,7 +16,7 @@ export default async function DynamicCategoryPage({
   const supabase = await createServerSupabase();
   const { data: category, error } = await supabase
     .from("categories")
-    .select("id, name")
+    .select("id, name, description, image")
     .eq("id", categoryId)
     .single();
 
@@ -24,7 +24,12 @@ export default async function DynamicCategoryPage({
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <CategoryPage categoryName={category.name} categoryId={category.id} />
+      <CategoryPage
+        categoryName={category.name}
+        categoryId={category.id}
+        categoryDescription={category.description}
+        categoryImage={category.image}
+      />
     </Suspense>
   );
 }

@@ -18,12 +18,15 @@ export default function Home() {
         <CategoryCarousel />
         <div className="container mx-auto px-4">
           <PersonalizedSections />
-          <section id="products" className="space-y-4 py-8">
-            <div className="flex items-end justify-between gap-4">
+          <section id="products" className="space-y-4 py-8 md:py-10">
+            <div className="section-head">
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Catalog</p>
-                <h2 className="text-2xl md:text-3xl font-bold">All products</h2>
+                <p className="eyebrow">The catalog</p>
+                <h2 className="display-title mt-1">All products</h2>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Filter, sort and find your next favourite.
+              </p>
             </div>
             <Suspense
               fallback={
