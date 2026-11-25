@@ -38,7 +38,7 @@ export function VisualSearch() {
       if (data.error) throw new Error(data.error);
       const prods = data.products ?? [];
       setResults(prods);
-      if (prods.length === 0) setError("No similar products found. Generate embeddings first (Admin).");
+      if (prods.length === 0) setError("No products with 80%+ similarity found. Try a different image.");
     } catch (e: any) {
       setError(e?.message || "Search failed");
     } finally {
@@ -63,9 +63,10 @@ export function VisualSearch() {
           onClick={() => setOpen(true)}
           aria-label="Visual search"
           title="Search by image"
-          className="fixed bottom-5 right-20 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-105 transition-transform flex items-center justify-center"
+          className="fixed bottom-5 right-20 z-50 h-14 pl-4 pr-5 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
         >
-          <Camera className="h-6 w-6" />
+          <Camera className="h-5 w-5" />
+          <span className="text-sm font-medium whitespace-nowrap">Search by image</span>
         </button>
       )}
 

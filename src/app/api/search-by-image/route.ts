@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const byId = new Map((products ?? []).map((p: any) => [p.product_id, p]));
     const result = (data ?? [])
       .map((r: any) => ({ ...byId.get(r.product_id), similarity: r.similarity }))
-      .filter((p: any) => p.product_id);
+      .filter((p: any) => p.product_id && (p.similarity ?? 0) >= 0.8);
 
     return NextResponse.json({ products: result, matches: data });
   } catch (error: any) {
